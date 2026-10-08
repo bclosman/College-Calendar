@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <title>Calendar Dashboard</title>
+</head>
+<body>
+    <h1>Upcoming Assignments</h1>
+    <ul id="assignments"></ul>
+
+    <script>
+        async function loadAssignments() {
+            const response = await fetch("/api/assignments");
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch assignments");
+            }
+
+            const assignments = await response.json();
+            const list = document.getElementById("assignments");
+
+            list.replaceChildren();
+
+            for (const assignment of assignments) {
+                const item = document.createElement("li");
+                item.textContent =
+                    `${assignment.course}: ${assignment.name}`;
+                list.appendChild(item);
+            }
+        }
+
+        loadAssignments().catch(console.error);
+    </script>
+</body>
+</html>
