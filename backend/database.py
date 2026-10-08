@@ -103,3 +103,6 @@ def get_assignments(
         return [dict(row) for row in rows]
     finally:
         connection.close()
+
+def save_event(event):
+    pass

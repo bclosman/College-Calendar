@@ -2,8 +2,14 @@
 venv/*
 
 // Ignore Python cache files
-*/__pycache__/*
+**/__pycache__/*
 ./pytest_cache
 
 // vscode
 .vscode/*
+
+// Database
+data/*
+
+// environment
+calendars.json

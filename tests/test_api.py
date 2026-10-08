@@ -1,4 +1,3 @@
-
 def test_get_assignments(client, db):
     db.save_assignment({
         "id": 101,
