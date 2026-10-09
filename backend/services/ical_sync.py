@@ -1,3 +1,4 @@
+import re
 import requests
 from icalendar import Calendar
 from ..database import save_assignment
@@ -25,6 +26,7 @@ def fetch_events(url: str) -> list[dict]:
             "location": str(event.get("LOCATION", "")),
             "start": start,
             "end": end,
+            "url": str(event.get("URL", ""))
         })
 
     return events
@@ -33,7 +35,26 @@ def fetch_assignments_from_ical(canvas_url: str):
     events = fetch_events(canvas_url)
 
     for event in events:
-        print(f"UID: {event["uid"]}")
+        if "assignment" in event["uid"]:
+            split = re.split(r' \(| \[', event["title"], maxsplit=1)
+            assignment_title = split[0]
+
+            course = re.search(r"\b([A-Z]+)-(\d+)\b", split[1])
+            course_name = course.group(0)
+            course_id = course.group(2)
+
+            due_date = event["start"]
+            url = event["url"]
+
+            save_assignment({
+                "uid": event["uid"],
+                "course_id": course_id,
+                "course_name": course_name,
+                "name": assignment_title,
+                "due_at": due_date,
+                "submitted": False,
+                "url": url
+            })
 
 def sync_calendar(url: str):
     pass

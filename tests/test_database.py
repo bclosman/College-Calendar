@@ -16,7 +16,6 @@ def test_database_initialized(client, db):
 
 def test_insert_assignment(db):
     assignment = {
-        "id": 101,
         "course_id": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
@@ -37,7 +36,6 @@ def test_insert_assignment(db):
 
 def test_update_assignment(db):
     assignment = {
-        "id": 101,
         "course_id": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
@@ -61,7 +59,6 @@ def test_update_assignment(db):
 
 def test_submitted_filter(db):
     assignment = {
-        "id": 101,
         "course_id": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",

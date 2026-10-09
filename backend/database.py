@@ -4,6 +4,8 @@ from pathlib import Path
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "database.db"
 
 def get_connection():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     return connection
@@ -17,7 +19,8 @@ def init_db():
     try:
         connection.execute("""
             CREATE TABLE IF NOT EXISTS assignments (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                uid TEXT NOT NULL UNIQUE,
                 course_id INTEGER NOT NULL,
                 course_name TEXT NOT NULL,
                 name TEXT NOT NULL,
@@ -38,30 +41,30 @@ def save_assignment(assignment):
     try:
         conn.execute("""
             INSERT INTO assignments (
-                id, course_id, course_name,
+                uid, course_id, course_name,
                 name, due_at, submitted, url
             )
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
+            ON CONFLICT(uid) DO UPDATE SET
                 course_id = excluded.course_id,
                 course_name = excluded.course_name,
                 name = excluded.name,
                 due_at = excluded.due_at,
-                submitted = excluded.submitted,
                 url = excluded.url
         """, (
-            assignment["id"],
+            assignment["uid"],
             assignment["course_id"],
             assignment["course_name"],
             assignment["name"],
             assignment["due_at"],
-            assignment["submitted"],
+            int(assignment.get("submitted", False)),
             assignment["url"]
         ))
 
         conn.commit()
     finally:
         conn.close()
+
 
 def get_assignments(
     course_id: int | None = None,
@@ -104,5 +107,18 @@ def get_assignments(
     finally:
         connection.close()
 
+def print_assignments():
+    conn = get_connection()
+
+    rows = conn.execute("SELECT * FROM assignments").fetchall()
+
+    for row in rows:
+        print(dict(row))
+
+    conn.close()
+
 def save_event(event):
+    pass
+
+def get_event():
     pass

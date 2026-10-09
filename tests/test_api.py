@@ -1,6 +1,5 @@
 def test_get_assignments(client, db):
     db.save_assignment({
-        "id": 101,
         "course_id": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
@@ -22,7 +21,6 @@ def test_get_assignments(client, db):
 def test_api_course_filter(client, db):
     for course_id in [235, 310]:
         db.save_assignment({
-            "id": course_id,
             "course_id": course_id,
             "course_name": f"CSCE {course_id}",
             "name": "Homework",
