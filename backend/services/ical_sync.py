@@ -1,5 +1,6 @@
 import re
 import requests
+from datetime import date, datetime, timezone
 from icalendar import Calendar
 from ..database import save_assignment
 
@@ -44,6 +45,16 @@ def fetch_assignments_from_ical(canvas_url: str):
             course_id = course.group(2)
 
             due_date = event["start"]
+            if isinstance(due_date, datetime):
+                due_date = (
+                    due_date.astimezone(timezone.utc)
+                    .strftime("%Y-%m-%dT%H:%M:%SZ")
+                )
+            elif isinstance(due_date, date):
+                due_date = due_date.isoformat()
+            else:
+                raise ValueError("Error: Invalid Date Format")
+            
             url = event["url"]
 
             save_assignment({
