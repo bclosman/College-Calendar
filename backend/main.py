@@ -1,10 +1,15 @@
-
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from backend import database
 
+FRONTEND_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "frontend" / "index.html"
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,3 +50,7 @@ def get_assignments(
         submitted=submitted,
         limit=limit
     )
+
+@app.get("/")
+def frontend():
+    return FileResponse(FRONTEND_PATH)
