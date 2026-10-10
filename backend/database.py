@@ -169,7 +169,7 @@ def get_events(
     if not 1 <= limit <= 500:
         raise ValueError("Limit must be between 1 and 500")
 
-    query = "SELECT * FROM assignments"
+    query = "SELECT * FROM events"
     conditions = ["due_at IS NOT NULL"]
     params = []
 

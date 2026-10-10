@@ -1,7 +1,13 @@
+
 from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 from backend import database
+from backend.api import router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,5 +22,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-for route in app.routes:
-    print(route.path)
+# Register API endpoints
+app.include_router(router)
+
+# Location of frontend HTML
+FRONTEND_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "frontend" / "index.html"
+)
+
+# Serve frontend at root URL
+@app.get("/")
+def frontend():
+    return FileResponse(FRONTEND_PATH)
