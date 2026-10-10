@@ -30,16 +30,29 @@ def init_db():
             )
         """)
 
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                uid TEXT NOT NULL UNIQUE,
+                calendar TEXT NOT NULL,
+                name TEXT NOT NULL,
+                start TEXT,
+                end TEXT,
+                url TEXT,
+                UNIQUE(calendar, uid)
+            )
+        """)
+
         connection.commit()
     finally:
         connection.close()
 
 
 def save_assignment(assignment):
-    conn = get_connection()
+    connection = get_connection()
 
     try:
-        conn.execute("""
+        connection.execute("""
             INSERT INTO assignments (
                 uid, course_id, course_name,
                 name, due_at, submitted, url
@@ -51,19 +64,19 @@ def save_assignment(assignment):
                 name = excluded.name,
                 due_at = excluded.due_at,
                 url = excluded.url
-        """, (
-            assignment["uid"],
-            assignment["course_id"],
-            assignment["course_name"],
-            assignment["name"],
-            assignment["due_at"],
-            int(assignment.get("submitted", False)),
-            assignment["url"]
-        ))
+            """, (
+                assignment["uid"],
+                assignment["course_id"],
+                assignment["course_name"],
+                assignment["name"],
+                assignment["due_at"],
+                int(assignment.get("submitted", False)),
+                assignment["url"]
+            ))
 
-        conn.commit()
+        connection.commit()
     finally:
-        conn.close()
+        connection.close()
 
 
 def get_assignments(
@@ -108,17 +121,92 @@ def get_assignments(
         connection.close()
 
 def print_assignments():
-    conn = get_connection()
+    connection = get_connection()
 
-    rows = conn.execute("SELECT * FROM assignments").fetchall()
+    rows = connection.execute("SELECT * FROM assignments").fetchall()
 
     for row in rows:
         print(dict(row))
 
-    conn.close()
+    connection.close()
 
 def save_event(event):
-    pass
+    connection = get_connection()
 
-def get_event():
-    pass
+    try:
+        connection.execute("""
+            INSERT INTO events (
+                uid, calendar, name,
+                start, end, url
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(uid) DO UPDATE SET
+                calendar = excluded.calendar,
+                name = excluded.name,
+                start = excluded.start,
+                end = excluded.end,
+                url = excluded.url
+            """, (
+                event["uid"],
+                event["calendar"],
+                event["name"],
+                event["start"],
+                event["end"],
+                event["url"]
+            ))
+        
+        connection.commit()
+    finally:
+        connection.close()
+
+def get_events(
+    calendar: str | None = None,
+    name: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    limit: int = 100
+):
+    if not 1 <= limit <= 500:
+        raise ValueError("Limit must be between 1 and 500")
+
+    query = "SELECT * FROM assignments"
+    conditions = ["due_at IS NOT NULL"]
+    params = []
+
+    if calendar is not None:
+        conditions.append("calendar = ?")
+        params.append(calendar)
+
+    if name is not None:
+        conditions.append("name = ?")
+        params.append(name)
+
+    if start is not None:
+        conditions.append("start >= ?")
+        params.append(start)
+    
+    if end is not None:
+        conditions.append("end <= ?")
+        params.append(end)
+
+    query += " WHERE " + " AND ".join(conditions)
+    query += " ORDER BY start ASC LIMIT ?"
+    params.append(limit)
+
+    connection = get_connection()
+    try:
+        rows = connection.execute(query, params).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        connection.close()
+
+
+def print_events():
+    connection = get_connection()
+
+    rows = connection.execute("SELECT * FROM events").fetchall()
+
+    for row in rows:
+        print(dict(row))
+
+    connection.close()

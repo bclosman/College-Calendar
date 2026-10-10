@@ -2,7 +2,18 @@ import re
 import requests
 from datetime import date, datetime, timezone
 from icalendar import Calendar
-from ..database import save_assignment
+from ..database import save_assignment, save_event
+
+def format_date(_date: any):
+    if isinstance(_date, datetime):
+        return _date.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    elif isinstance(_date, date):
+        return _date.isoformat()
+    elif _date is None:
+        return None
+    else:
+        raise ValueError("Error: Invalid Date Format")
+
 
 def fetch_events(url: str) -> list[dict]:
     response = requests.get(url, timeout=20)
@@ -32,7 +43,7 @@ def fetch_events(url: str) -> list[dict]:
 
     return events
 
-def fetch_assignments_from_ical(canvas_url: str):
+def sync_assignments_from_ical(canvas_url: str):
     events = fetch_events(canvas_url)
 
     for event in events:
@@ -44,16 +55,7 @@ def fetch_assignments_from_ical(canvas_url: str):
             course_name = course.group(0)
             course_id = course.group(2)
 
-            due_date = event["start"]
-            if isinstance(due_date, datetime):
-                due_date = (
-                    due_date.astimezone(timezone.utc)
-                    .strftime("%Y-%m-%dT%H:%M:%SZ")
-                )
-            elif isinstance(due_date, date):
-                due_date = due_date.isoformat()
-            else:
-                raise ValueError("Error: Invalid Date Format")
+            due_date = format_date(event["start"])
             
             url = event["url"]
 
@@ -67,5 +69,17 @@ def fetch_assignments_from_ical(canvas_url: str):
                 "url": url
             })
 
-def sync_calendar(url: str):
-    pass
+def sync_calendar(url: str, calendar_name: str):
+    events = fetch_events(url)
+    for event in events:
+        start = format_date(event["start"])
+        end = format_date(event["end"])
+        
+        save_event({
+            "uid": event["uid"],
+            "calendar": calendar_name,
+            "name": event["title"],
+            "start": start,
+            "end": end,
+            "url": event["url"]
+        })
