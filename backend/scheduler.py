@@ -30,7 +30,7 @@ def sync_assignments():
 
     try:
         sync_assignments_from_canvas()
-    except exceptions.InvalidAccessToken:
+    except exceptions.InvalidAccessToken or exceptions.ResourceDoesNotExist:
         print("Canvas API Failed! Using iCal...")
         canvas_url = get_calendar_url("Canvas")
         sync_assignments_from_ical(canvas_url)
