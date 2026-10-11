@@ -93,12 +93,14 @@ def sync_assignments_from_ical(canvas_url: str):
             
             url = event["url"]
             assignment_id = int(re.search(r"assignment_(\d+)", urlparse(url).fragment).group(1))
+            course_id = int(re.search(r"course_(\d+)", urlparse(url).query).group(1))
             
 
             save_assignment({
                 "id": assignment_id,
                 "course_code": course_code,
                 "course_name": course_name,
+                "course_id": course_id,
                 "name": assignment_title,
                 "due_at": due_date,
                 "submitted": False,

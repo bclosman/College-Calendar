@@ -1,10 +1,12 @@
 import json
+from canvasapi import exceptions
 from datetime import datetime
 import time
 from apscheduler.schedulers.blocking import BlockingScheduler
 from pathlib import Path
 from .database import init_db, print_events
 from .services.ical_sync import sync_assignments_from_ical, sync_calendar
+from .services.canvas_sync import sync_assignments_from_canvas
 
 CALENDAR_PATH = Path(__file__).resolve().parent.parent / "calendars.json"
 
@@ -26,8 +28,12 @@ def sync_assignments():
     start_time = time.perf_counter()
     print("Starting Canvas assignment sync...")
 
-    canvas_url = get_calendar_url("Canvas")
-    sync_assignments_from_ical(canvas_url)
+    try:
+        sync_assignments_from_canvas()
+    except exceptions.InvalidAccessToken:
+        print("Canvas API Failed! Using iCal...")
+        canvas_url = get_calendar_url("Canvas")
+        sync_assignments_from_ical(canvas_url)
 
     duration = time.perf_counter() - start_time
     print(f"Canvas assignment took {duration:.6f} seconds to sync!")

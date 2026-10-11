@@ -22,6 +22,7 @@ def init_db():
                 id INTEGER PRIMARY KEY,
                 course_code TEXT NOT NULL,
                 course_name TEXT NOT NULL,
+                course_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 due_at TEXT,
                 submitted INTEGER NOT NULL DEFAULT 0,
@@ -53,20 +54,23 @@ def save_assignment(assignment):
     try:
         connection.execute("""
             INSERT INTO assignments (
-                id, course_code, course_name,
+                id, course_code, course_name, course_id,
                 name, due_at, submitted, url
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 course_code = excluded.course_code,
                 course_name = excluded.course_name,
+                course_id = excluded.course_id,
                 name = excluded.name,
                 due_at = excluded.due_at,
+                submitted = excluded.submitted,
                 url = excluded.url
             """, (
                 assignment["id"],
                 assignment["course_code"],
                 assignment["course_name"],
+                assignment["course_id"],
                 assignment["name"],
                 assignment["due_at"],
                 int(assignment.get("submitted", False)),
