@@ -1,5 +1,7 @@
 import json
+from datetime import datetime
 import time
+from apscheduler.schedulers.blocking import BlockingScheduler
 from pathlib import Path
 from .database import init_db, print_events
 from .services.ical_sync import sync_assignments_from_ical, sync_calendar
@@ -37,14 +39,36 @@ def sync_events():
         print(f"Starting {calendar["name"]} Calendar sync...")
 
         sync_calendar(calendar["url"], calendar["name"])
+        
         duration = time.perf_counter() - start_time
         print(f"{calendar["name"]} Calendar took {duration:.6f} seconds to sync!")
 
-if __name__ == "__main__":
+def run_scheduler():
     init_db()
-    
-    while True:
-        sync_assignments()
-        sync_events()
 
-        time.sleep(60 * 5)
+    scheduler = BlockingScheduler()
+
+    scheduler.add_job(
+        sync_assignments,
+        "interval",
+        minutes=5,
+        next_run_time=datetime.now(),
+        id="assignments",
+        max_instances=1,
+        coalesce=True
+    )
+
+    scheduler.add_job(
+        sync_events,
+        "interval",
+        minutes=5,
+        next_run_time=datetime.now(),
+        id="events",
+        max_instances=1,
+        coalesce=True
+    )
+
+    scheduler.start()
+
+if __name__ == "__main__":
+    run_scheduler()

@@ -1,8 +1,9 @@
 import re
+import recurring_ical_events
 import requests
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from icalendar import Calendar
-from ..database import save_assignment, save_event
+from ..database import save_assignment, save_events
 
 def format_date(_date: any):
     if isinstance(_date, datetime):
@@ -22,7 +23,31 @@ def fetch_events(url: str) -> list[dict]:
     calendar = Calendar.from_ical(response.content)
     events = []
 
-    for event in calendar.walk("VEVENT"):
+    # Define how far to retrieve events
+    today = date.today()
+    start_date = today - timedelta(days=30)
+    end_date = today + timedelta(days=120)
+
+    # Identify recurring event series
+    recurring_uids = {
+        str(event.get("UID"))
+        for event in calendar.walk("VEVENT")
+        if (
+            event.get("RRULE") is not None
+            or event.get("RDATE") is not None
+            or event.get("RECURRENCE-ID") is not None
+        )
+    }
+
+    # Expand recurring events into individual occurrences
+    occurrences = recurring_ical_events.of(
+        calendar
+    ).between(start_date, end_date)
+
+    for event in occurrences:
+
+        uid = str(event.get("UID", ""))
+
         start = event.decoded("DTSTART")
 
         end = (
@@ -31,8 +56,12 @@ def fetch_events(url: str) -> list[dict]:
             else None
         )
 
+        # Each recurring occurrence needs a unique ID
+        if uid in recurring_uids:
+            uid += f" : {start}"
+
         events.append({
-            "uid": str(event.get("UID", "")),
+            "uid": uid,
             "title": str(event.get("SUMMARY", "")),
             "description": str(event.get("DESCRIPTION", "")),
             "location": str(event.get("LOCATION", "")),
@@ -42,6 +71,7 @@ def fetch_events(url: str) -> list[dict]:
         })
 
     return events
+
 
 def sync_assignments_from_ical(canvas_url: str):
     events = fetch_events(canvas_url)
@@ -71,15 +101,4 @@ def sync_assignments_from_ical(canvas_url: str):
 
 def sync_calendar(url: str, calendar_name: str):
     events = fetch_events(url)
-    for event in events:
-        start = format_date(event["start"])
-        end = format_date(event["end"])
-        
-        save_event({
-            "uid": event["uid"],
-            "calendar": calendar_name,
-            "name": event["title"],
-            "start": start,
-            "end": end,
-            "url": event["url"]
-        })
+    save_events(calendar_name, events)

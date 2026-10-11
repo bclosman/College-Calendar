@@ -130,32 +130,37 @@ def print_assignments():
 
     connection.close()
 
-def save_event(event):
+def save_events(calendar_name: str, events: list[dict]):
     connection = get_connection()
 
     try:
-        connection.execute("""
-            INSERT INTO events (
-                uid, calendar, name,
-                start, end, url
+        with connection:
+            # Remove previous events for this calendar
+            connection.execute(
+                "DELETE FROM events WHERE calendar = ?",
+                (calendar_name,)
             )
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(uid) DO UPDATE SET
-                calendar = excluded.calendar,
-                name = excluded.name,
-                start = excluded.start,
-                end = excluded.end,
-                url = excluded.url
-            """, (
-                event["uid"],
-                event["calendar"],
-                event["name"],
-                event["start"],
-                event["end"],
-                event["url"]
-            ))
-        
-        connection.commit()
+
+            # Insert the updated events
+            connection.executemany("""
+                INSERT INTO events (
+                    uid, calendar, name,
+                    start, end, url
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, [
+                (
+                    event["uid"],
+                    calendar_name,
+                    event["title"],
+                    event["start"],
+                    event["end"],
+                    event.get("url", "")
+                )
+                for event in events
+            ])
+            
+            connection.commit()
     finally:
         connection.close()
 
