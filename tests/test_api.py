@@ -1,7 +1,7 @@
 def test_get_assignments(client, db):
     db.save_assignment({
-        "uid": "event-assignment-123456",
-        "course_id": 235,
+        "id": "123456",
+        "course_code": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
         "due_at": "2026-10-12T23:59:00Z",
@@ -20,11 +20,11 @@ def test_get_assignments(client, db):
 
 
 def test_api_course_filter(client, db):
-    for course_id in [235, 310]:
+    for course_code in [235, 310]:
         db.save_assignment({
-            "uid": f"event-assignment-123{course_id}",
-            "course_id": course_id,
-            "course_name": f"CSCE {course_id}",
+            "id": f"123{course_code}",
+            "course_code": course_code,
+            "course_name": f"CSCE {course_code}",
             "name": "Homework",
             "due_at": "2026-10-12T23:59:00Z",
             "submitted": False,
@@ -33,7 +33,7 @@ def test_api_course_filter(client, db):
 
     response = client.get(
         "/api/assignments",
-        params={"course_id": 235}
+        params={"course_code": 235}
     )
 
     assert response.status_code == 200
@@ -41,7 +41,7 @@ def test_api_course_filter(client, db):
     data = response.json()
 
     assert len(data) == 1
-    assert data[0]["course_id"] == 235
+    assert data[0]["course_code"] == 235
 
 
 def test_invalid_limit(client):

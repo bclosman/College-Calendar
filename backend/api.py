@@ -21,14 +21,14 @@ def to_utc_string(value: datetime | None):
 
 @router.get("/assignments")
 def get_assignments(
-    course_id: int | None = None,
+    course_code: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
     submitted: bool | None = None,
     limit: int = Query(100, ge=1, le=500)
 ):
     return database.get_assignments(
-        course_id=course_id,
+        course_code=course_code,
         start=to_utc_string(start),
         end=to_utc_string(end),
         submitted=submitted,

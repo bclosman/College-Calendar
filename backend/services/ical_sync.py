@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlparse
 import recurring_ical_events
 import requests
 from datetime import date, datetime, timedelta, timezone
@@ -81,17 +82,22 @@ def sync_assignments_from_ical(canvas_url: str):
             split = re.split(r' \(| \[', event["title"], maxsplit=1)
             assignment_title = split[0]
 
-            course = re.search(r"\b([A-Z]+)-(\d+)\b", split[1])
-            course_name = course.group(0)
-            course_id = course.group(2)
+            course = re.search(
+                r"\b([A-Z]+)-(\d+)\.(\d+)\.(\d+)\b",
+                split[1]
+            )
+            course_name = f"{course.group(1)}-{course.group(2)}"
+            course_code = course.group(0)
 
             due_date = format_date(event["start"])
             
             url = event["url"]
+            assignment_id = int(re.search(r"assignment_(\d+)", urlparse(url).fragment).group(1))
+            
 
             save_assignment({
-                "uid": event["uid"],
-                "course_id": course_id,
+                "id": assignment_id,
+                "course_code": course_code,
                 "course_name": course_name,
                 "name": assignment_title,
                 "due_at": due_date,

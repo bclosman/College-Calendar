@@ -16,8 +16,8 @@ def test_database_initialized(client, db):
 
 def test_insert_assignment(db):
     assignment = {
-        "uid": "event-assignment-123456",
-        "course_id": 235,
+        "id": "123456",
+        "course_code": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
         "due_at": "2026-10-12T23:59:00Z",
@@ -32,13 +32,13 @@ def test_insert_assignment(db):
     assert len(results) == 1
     assert results[0]["id"] == 1
     assert results[0]["name"] == "Homework 4"
-    assert results[0]["course_id"] == 235
+    assert results[0]["course_code"] == 235
 
 
 def test_update_assignment(db):
     assignment = {
-        "uid": "event-assignment-123456",
-        "course_id": 235,
+        "id": "123456",
+        "course_code": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
         "due_at": "2026-10-12T23:59:00Z",
@@ -61,8 +61,8 @@ def test_update_assignment(db):
 
 def test_submitted_filter(db):
     assignment = {
-        "uid": "event-assignment-123456",
-        "course_id": 235,
+        "id": "123456",
+        "course_code": 235,
         "course_name": "CSCE 235",
         "name": "Homework 4",
         "due_at": "2026-10-12T23:59:00Z",

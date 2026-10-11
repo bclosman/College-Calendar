@@ -19,9 +19,8 @@ def init_db():
     try:
         connection.execute("""
             CREATE TABLE IF NOT EXISTS assignments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                uid TEXT NOT NULL UNIQUE,
-                course_id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY,
+                course_code TEXT NOT NULL,
                 course_name TEXT NOT NULL,
                 name TEXT NOT NULL,
                 due_at TEXT,
@@ -54,19 +53,19 @@ def save_assignment(assignment):
     try:
         connection.execute("""
             INSERT INTO assignments (
-                uid, course_id, course_name,
+                id, course_code, course_name,
                 name, due_at, submitted, url
             )
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(uid) DO UPDATE SET
-                course_id = excluded.course_id,
+            ON CONFLICT(id) DO UPDATE SET
+                course_code = excluded.course_code,
                 course_name = excluded.course_name,
                 name = excluded.name,
                 due_at = excluded.due_at,
                 url = excluded.url
             """, (
-                assignment["uid"],
-                assignment["course_id"],
+                assignment["id"],
+                assignment["course_code"],
                 assignment["course_name"],
                 assignment["name"],
                 assignment["due_at"],
@@ -80,7 +79,7 @@ def save_assignment(assignment):
 
 
 def get_assignments(
-    course_id: int | None = None,
+    course_code: int | None = None,
     start: str | None = None,
     end: str | None = None,
     submitted: bool | None = None,
@@ -93,9 +92,9 @@ def get_assignments(
     conditions = ["due_at IS NOT NULL"]
     params = []
 
-    if course_id is not None:
-        conditions.append("course_id = ?")
-        params.append(course_id)
+    if course_code is not None:
+        conditions.append("course_code = ?")
+        params.append(course_code)
 
     if start is not None:
         conditions.append("due_at >= ?")
