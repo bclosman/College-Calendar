@@ -1,4 +1,5 @@
 import os
+import re
 from canvasapi import Canvas
 from datetime import timedelta, datetime, timezone
 from dotenv import load_dotenv
@@ -34,11 +35,13 @@ def sync_assignments_from_canvas():
             if not start_date <= due_at <= end_date:
                 continue
 
+            name = course.course_code[:8]
+
             submission = getattr(assignment, "submission", None)
             save_assignment({
                 "id": assignment.id,
                 "course_code": course.course_code,
-                "course_name": course.name,
+                "course_name": name,
                 "course_id": course.id,
                 "name": assignment.name,
                 "due_at": due_at.strftime("%Y-%m-%dT%H:%M:%SZ"),

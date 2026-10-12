@@ -110,3 +110,9 @@ def sync_assignments_from_ical(canvas_url: str):
 def sync_calendar(url: str, calendar_name: str):
     events = fetch_events(url)
     save_events(calendar_name, events)
+
+if __name__ == "__main__":
+    from ..scheduler import get_calendar_url
+
+    canvas_url = get_calendar_url("Canvas")
+    sync_assignments_from_ical(canvas_url)
