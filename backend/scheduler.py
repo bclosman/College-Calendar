@@ -65,7 +65,7 @@ def daily_notification():
         tzinfo=time_zone
     )
     end_local = datetime.combine(
-        today + timedelta(days=6),
+        today,
         time.max,
         tzinfo=time_zone
     )
