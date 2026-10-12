@@ -2,6 +2,7 @@ import psutil
 import subprocess
 import sys
 import time
+from backend.services.notification import send_notification
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -51,6 +52,10 @@ def main():
         )
         processes.append(scheduler)
 
+        send_notification(
+            title="System Update",
+            message="Calendar server up and running!"
+        )
         print("Calendar application started.")
 
         # Keep launcher alive while both processes run
@@ -62,6 +67,10 @@ def main():
             time.sleep(5)
 
     except KeyboardInterrupt:
+        send_notification(
+            title="System Update",
+            message="Calendar server shut down."
+        )
         print("\nShutting down calendar application...")
 
     finally:

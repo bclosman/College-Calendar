@@ -168,6 +168,8 @@ def weekly_notification():
         )        
 
 def remove_old():
+    load_dotenv()
+    
     print("Removing old objects...")
     local_tz = ZoneInfo(os.getenv("TIME_ZONE"))
     today = datetime.now(local_tz).date()
@@ -244,10 +246,6 @@ def run_scheduler():
         replace_existing=True
     )
 
-    send_notification(
-        title="System Uodate",
-        message="Calendar server up and running!"
-    )
     scheduler.start()
 
 if __name__ == "__main__":
