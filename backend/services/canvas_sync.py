@@ -19,8 +19,8 @@ def sync_assignments_from_canvas():
     )
 
     today = datetime.now(timezone.utc)
-    start_date = today - timedelta(days=14)
-    end_date = today + timedelta(days=90)
+    start_date = today - timedelta(days=45)
+    end_date = today + timedelta(days=120)
 
     for course in courses:
         assignments = course.get_assignments(include=["submission"])

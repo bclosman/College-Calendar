@@ -26,7 +26,7 @@ def fetch_events(url: str) -> list[dict]:
 
     # Define how far to retrieve events
     today = date.today()
-    start_date = today - timedelta(days=30)
+    start_date = today - timedelta(days=45)
     end_date = today + timedelta(days=120)
 
     # Identify recurring event series

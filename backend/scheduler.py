@@ -1,13 +1,13 @@
 import json
 import os
-import time
+import time as time_module
 from canvasapi import exceptions
 from datetime import date, datetime, time, timedelta, timezone
 from dotenv import load_dotenv
 from apscheduler.schedulers.blocking import BlockingScheduler
 from pathlib import Path
 from zoneinfo import ZoneInfo
-from .database import init_db, get_assignments
+from .database import init_db, get_assignments, remove_assignments, remove_events
 from .services.ical_sync import sync_assignments_from_ical, sync_calendar
 from .services.canvas_sync import sync_assignments_from_canvas
 from .services.notification import send_notification
@@ -29,7 +29,7 @@ def get_calendar_url(name: str) -> str:
     raise ValueError(f"Calendar '{name}' not found")
 
 def sync_assignments():
-    start_time = time.perf_counter()
+    start_time = time_module.perf_counter()
     print("Starting Canvas assignment sync...")
 
     try:
@@ -39,18 +39,18 @@ def sync_assignments():
         canvas_url = get_calendar_url("Canvas")
         sync_assignments_from_ical(canvas_url)
 
-    duration = time.perf_counter() - start_time
+    duration = time_module.perf_counter() - start_time
     print(f"Canvas assignment took {duration:.6f} seconds to sync!")
 
 def sync_events():
     calendars = get_calendars()
     for calendar in calendars["calendars"]:
-        start_time = time.perf_counter()
+        start_time = time_module.perf_counter()
         print(f"Starting {calendar["name"]} Calendar sync...")
 
         sync_calendar(calendar["url"], calendar["name"])
         
-        duration = time.perf_counter() - start_time
+        duration = time_module.perf_counter() - start_time
         print(f"{calendar["name"]} Calendar took {duration:.6f} seconds to sync!")
 
 def daily_notification():
@@ -167,6 +167,25 @@ def weekly_notification():
             message="You have no assignments due this week!",
         )        
 
+def remove_old():
+    print("Removing old objects...")
+    local_tz = ZoneInfo(os.getenv("TIME_ZONE"))
+    today = datetime.now(local_tz).date()
+
+    cutoff = today - timedelta(days=45)
+
+    utc_cutoff = datetime.combine(
+            cutoff, 
+            time.min, 
+            tzinfo=local_tz
+        ).astimezone(timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+    
+    remove_assignments(cutoff, utc_cutoff)
+    remove_events(cutoff, utc_cutoff)
+    print("Removal Complete!")
+
 def run_scheduler():
     init_db()
 
@@ -188,6 +207,16 @@ def run_scheduler():
         minutes=5,
         next_run_time=datetime.now(),
         id="events",
+        max_instances=1,
+        coalesce=True
+    )
+
+    scheduler.add_job(
+        remove_old,
+        "interval",
+        minutes=60,
+        next_run_time=datetime.now(),
+        id="removal",
         max_instances=1,
         coalesce=True
     )
@@ -215,6 +244,10 @@ def run_scheduler():
         replace_existing=True
     )
 
+    send_notification(
+        title="System Uodate",
+        message="Calendar server up and running!"
+    )
     scheduler.start()
 
 if __name__ == "__main__":

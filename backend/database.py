@@ -133,6 +133,25 @@ def print_assignments():
 
     connection.close()
 
+def remove_assignments(date: str, utc_date: str):
+    connection = get_connection()
+
+    try:
+        with connection:
+            # Remove assignments older than 14 days
+            connection.execute("""
+                DELETE FROM assignments
+                WHERE
+                    (LENGTH(due_at) = 10 AND due_at < ?)
+                    OR
+                    (LENGTH(due_at) > 10 AND due_at < ?)
+            """, (
+                date.isoformat(),
+                utc_date
+            )).rowcount
+    finally:
+        connection.close()
+
 def save_events(calendar_name: str, events: list[dict]):
     connection = get_connection()
 
@@ -218,3 +237,29 @@ def print_events():
         print(dict(row))
 
     connection.close()
+
+def remove_events(date: str, utc_date: str):
+    connection = get_connection()
+
+    try:
+        with connection:
+            connection.execute("""
+                DELETE FROM events
+                WHERE
+                    ("end" IS NOT NULL
+                     AND LENGTH("end") = 10
+                     AND "end" <= ?)
+                    OR
+                    ("end" IS NULL
+                     AND LENGTH("start") = 10
+                     AND "start" < ?)
+                    OR
+                    (LENGTH(COALESCE("end", "start")) > 10
+                     AND COALESCE("end", "start") < ?)
+            """, (
+                date.isoformat(),
+                date.isoformat(),
+                utc_date
+            )).rowcount
+    finally:
+        connection.close()
