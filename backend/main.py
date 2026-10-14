@@ -8,6 +8,8 @@ from fastapi.responses import FileResponse
 from backend import database
 from backend.api import router
 
+from .services.logger import Logger
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,7 +19,11 @@ async def lifespan(app: FastAPI):
     yield
 
     # Runs when the server shuts down
-    print("Server shutting down")
+    Logger.log(
+        Logger.LogType.INFO,
+        Logger.System.SYSTEM,
+        "Shutting Down..."
+    )
 
 
 app = FastAPI(lifespan=lifespan)

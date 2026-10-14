@@ -139,7 +139,7 @@ def remove_assignments(date: str, utc_date: str):
     try:
         with connection:
             # Remove assignments older than 14 days
-            connection.execute("""
+            row_count = connection.execute("""
                 DELETE FROM assignments
                 WHERE
                     (LENGTH(due_at) = 10 AND due_at < ?)
@@ -149,6 +149,8 @@ def remove_assignments(date: str, utc_date: str):
                 date.isoformat(),
                 utc_date
             )).rowcount
+
+            return row_count
     finally:
         connection.close()
 
@@ -243,7 +245,7 @@ def remove_events(date: str, utc_date: str):
 
     try:
         with connection:
-            connection.execute("""
+            row_count = connection.execute("""
                 DELETE FROM events
                 WHERE
                     ("end" IS NOT NULL
@@ -261,5 +263,7 @@ def remove_events(date: str, utc_date: str):
                 date.isoformat(),
                 utc_date
             )).rowcount
+
+            return row_count
     finally:
         connection.close()

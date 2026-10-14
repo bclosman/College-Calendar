@@ -1,0 +1,15 @@
+[37m[[0;38;2;125;125;125;49m2026-10-14 14:50:46.312705[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[0mLOG[37m][0m Test Notification                                                  This is a test[37m[[0;38;2;125;125;125;49m2026-10-14 14:51:40.691022[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[0mLOG[37m][0m Test Notification
+                                                  This is a test
+[37m[[0;38;2;125;125;125;49m2026-10-14 14:51:47.770145[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[0mLOG[37m][0m Test Notification
+                                                  This is a test
+[37m[[0;38;2;125;125;125;49m2026-10-14 14:58:33.855707[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[0mLOG[37m][0m Test Notification
+                                                  This is a test
+[37m[[0;38;2;125;125;125;49m2026-10-14 15:06:50.341371[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[0mINFO[37m][0m Sending Notification:
+                                                   Calendar Test
+                                                   Your notification system is working!
+                                                   Response: {'status': 1, 'request': '062b38a7-a2d2-4c1d-a44f-54beb2a90bb4'}
+[37m[[0;38;2;125;125;125;49m2026-10-14 15:10:55.263689[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[0mINFO[37m][0m Sending Notification:
+                                                   Daily Assignments
+                                                   CSCE-411(11:59PM): H3-Homework3-Initi...
+                                                   Response: {'status': 1, 'request': '41827b4f-f126-4578-9799-70c80169aa04'}
+[37m[[0;38;2;125;125;125;49m2026-10-14 15:14:37.575946[37m][0m [37m[[35mNOTIFICATION[37m][0m [37m[[33mWARN[37m][0m No assignments due today!

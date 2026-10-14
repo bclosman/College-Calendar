@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from .logger import Logger
 
 def send_notification(title, message, priority=0, url=None, url_title=None):
     load_dotenv()
@@ -24,8 +25,24 @@ def send_notification(title, message, priority=0, url=None, url_title=None):
         timeout=15
     )
 
-    response.raise_for_status()
+    # Logging
+    if response.status_code == 200:
+        log_type = Logger.LogType.INFO
+    elif 500 <= response.status_code:
+        log_type = Logger.LogType.WARNING
+    else:
+        log_type = Logger.LogType.ERROR
+
+    Logger.log(
+        log_type=log_type,
+        system=Logger.System.NOTIFICATION,
+        message=f"Sending Notification:\n{title}\n{message}\nResponse: {response.json()}"
+    )
+
     return response.json()
+
+def notification_worker():
+    pass
 
 if __name__ == "__main__":
     send_notification(

@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 from .database import init_db, get_assignments, remove_assignments, remove_events
 from .services.ical_sync import sync_assignments_from_ical, sync_calendar
 from .services.canvas_sync import sync_assignments_from_canvas
+from .services.logger import Logger
 from .services.notification import send_notification
 
 CALENDAR_PATH = Path(__file__).resolve().parent.parent / "calendars.json"
@@ -69,8 +70,10 @@ def daily_notification():
         time.max,
         tzinfo=time_zone
     )
-    start_utc = start_local.astimezone(timezone.utc)
-    end_utc = end_local.astimezone(timezone.utc)
+    start_utc = start_local.astimezone(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+    end_utc = end_local.astimezone(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
     
     assignments = get_assignments(
         start=start_utc, 
@@ -118,6 +121,12 @@ def daily_notification():
             message=message[1:],
             url=url,
             url_title=url_title
+        )
+    else:
+        Logger.log(
+            Logger.LogType.WARNING,
+            Logger.System.NOTIFICATION,
+            "No assignments due today!"
         )
 
 def weekly_notification():
@@ -169,8 +178,7 @@ def weekly_notification():
 
 def remove_old():
     load_dotenv()
-    
-    print("Removing old objects...")
+
     local_tz = ZoneInfo(os.getenv("TIME_ZONE"))
     today = datetime.now(local_tz).date()
 
@@ -184,9 +192,13 @@ def remove_old():
             "%Y-%m-%dT%H:%M:%SZ"
         )
     
-    remove_assignments(cutoff, utc_cutoff)
-    remove_events(cutoff, utc_cutoff)
-    print("Removal Complete!")
+    removed_assignments = remove_assignments(cutoff, utc_cutoff)
+    removed_envents = remove_events(cutoff, utc_cutoff)
+    Logger.log(
+        Logger.LogType.INFO,
+        Logger.System.DATABASE,
+        f"Removed {remove_assignments} assignments & {remove_events} events"
+    )
 
 def run_scheduler():
     init_db()
@@ -244,6 +256,12 @@ def run_scheduler():
         id="weekly_notifications",
         max_instances=1,
         replace_existing=True
+    )
+
+    Logger.log(
+        Logger.LogType.INFO,
+        Logger.System.SYSTEM,
+        "Starting Scheduler..."
     )
 
     scheduler.start()
