@@ -1,16 +1,20 @@
-// Ignore virtual environment
+# Ignore virtual environment
 venv/*
 
-// Ignore Python cache files
+# Ignore Python cache files
 **/__pycache__/*
 ./pytest_cache
 
-// vscode
+# vscode
 .vscode/*
 
-// Database
+# Database
 data/*
 
-// environment
+# environment
 calendars.json
 **/*.env
+
+# Logs
+**/logs.*
+**/log.*
