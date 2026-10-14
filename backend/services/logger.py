@@ -3,8 +3,7 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
-
-LOG_PATH = Path(__file__).resolve().parent.parent.parent / "logs.ans" 
+from queue import Queue
 
 class Colors():
     RESET = '\033[0m'
@@ -36,23 +35,52 @@ class Logger():
         DATABASE = f"{Colors.WHITE}[{Colors.CYAN}DATABASE{Colors.WHITE}]{Colors.RESET}"
         SYSTEM = f"{Colors.WHITE}[SYSTEM]{Colors.RESET}"
 
-    @staticmethod
-    def log(log_type: Logger.LogType, system: Logger.System, message: str, use_colors=True):
-        load_dotenv()
-        LOG_PATH = str(Path(__file__).resolve().parent.parent.parent) + '\\' + str(os.getenv("LOG_PATH"))
+    _initialized = False
 
-        if ".ans" not in LOG_PATH:
+    @classmethod
+    def initialize(cls):
+        if cls._initialized:
+            return
+
+        load_dotenv()
+        cls._path = str(Path(__file__).resolve().parent.parent.parent) + '\\' + str(os.getenv("LOG_PATH"))
+        cls._queue = Queue()
+        cls._initialized = True
+
+    @classmethod
+    def log(cls, log_type: Logger.LogType, system: Logger.System, message: str, use_colors=True):
+        if not cls._initialized:
+            raise RuntimeError(
+                "Call Logger.initialize() before Logger.log()"
+            )
+        
+        if ".ans" not in cls._path:
             use_colors = False
 
         time = f"{Colors.WHITE}[{Colors.GRAY}{datetime.now()}{Colors.WHITE}]{Colors.RESET}"
         header = f"{time} {system} {log_type} "
 
-        with open(LOG_PATH, "a") as file:
-            file.write(header if use_colors else Colors.remove_color(header))
-            for i, line in enumerate(message.split('\n')):
-                indent = " " * len(Colors.remove_color(header)) if i > 0 else ""
-                file.write(indent + line + '\n' if use_colors
-                           else indent + Colors.remove_color(line) + '\n')
+        text = header
+        for i, line in enumerate(message.split('\n')):
+            indent = " " * len(Colors.remove_color(header)) if i > 0 else ""
+            text += (indent + line + '\n')
+
+        if not use_colors:
+            text = Colors.remove_color(text)
+
+        _log = {"message": text}
+        cls._queue.put(_log)
+
+    @classmethod
+    def write_from_queue(cls):
+        if not cls._initialized:
+            raise RuntimeError(
+                "Call Logger.initialize() before Logger.log()"
+            )
+        
+        _log = cls._queue.get()
+        with open(cls._path, "a") as file:
+            file.write(_log["message"])
     
 if __name__ == "__main__":
     Logger.log(Logger.LogType.INFO, Logger.System.NOTIFICATION, "Test Notification\nThis is a test")
