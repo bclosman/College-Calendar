@@ -48,6 +48,12 @@ def get_events(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Logger.initialize()
+    Logger.log(
+        Logger.LogType.INFO,
+        Logger.System.SYSTEM,
+        "Starting Server..."
+    )
+    
     database.init_db()
 
     try:
@@ -56,7 +62,7 @@ async def lifespan(app: FastAPI):
         Logger.log(
             Logger.LogType.INFO,
             Logger.System.SYSTEM,
-            "Shutting Down..."
+            "Shutting Down Server..."
         )
         Logger.flush()
 

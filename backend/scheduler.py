@@ -1,5 +1,6 @@
 import json
 import os
+import psutil
 import time as time_module
 from canvasapi import exceptions
 from datetime import date, datetime, time, timedelta, timezone
@@ -33,28 +34,38 @@ def get_calendar_url(name: str) -> str:
 
 def sync_assignments():
     start_time = time_module.perf_counter()
-    print("Starting Canvas assignment sync...")
 
     try:
         sync_assignments_from_canvas()
-    except exceptions.InvalidAccessToken or exceptions.ResourceDoesNotExist:
-        print("Canvas API Failed! Using iCal...")
+    except:
+        Logger.log(
+            Logger.LogType.WARNING,
+            Logger.System.DATABASE,
+            "Canvas API Failed! Using iCal..."
+        )
         canvas_url = get_calendar_url("Canvas")
         sync_assignments_from_ical(canvas_url)
 
     duration = time_module.perf_counter() - start_time
-    print(f"Canvas assignment took {duration:.6f} seconds to sync!")
+    Logger.log(
+            Logger.LogType.INFO,
+            Logger.System.DATABASE,
+            f"Canvas took {duration:.6f} seconds to sync!"
+        )    
 
 def sync_events():
     calendars = get_calendars()
     for calendar in calendars["calendars"]:
         start_time = time_module.perf_counter()
-        print(f"Starting {calendar["name"]} Calendar sync...")
 
         sync_calendar(calendar["url"], calendar["name"])
         
         duration = time_module.perf_counter() - start_time
-        print(f"{calendar["name"]} Calendar took {duration:.6f} seconds to sync!")        
+        Logger.log(
+            Logger.LogType.INFO,
+            Logger.System.DATABASE,
+            f"{calendar["name"]} Calendar took {duration:.6f} seconds to sync!"
+        )        
 
 def remove_old():
     load_dotenv()
@@ -62,7 +73,7 @@ def remove_old():
     local_tz = ZoneInfo(os.getenv("TIME_ZONE"))
     today = datetime.now(local_tz).date()
 
-    cutoff = today - timedelta(days=45)
+    cutoff = today - timedelta(days=46)
 
     utc_cutoff = datetime.combine(
             cutoff, 
@@ -73,12 +84,47 @@ def remove_old():
         )
     
     removed_assignments = remove_assignments(cutoff, utc_cutoff)
-    removed_envents = remove_events(cutoff, utc_cutoff)
+    removed_events = remove_events(cutoff, utc_cutoff)
     Logger.log(
         Logger.LogType.INFO,
         Logger.System.DATABASE,
-        f"Removed {remove_assignments} assignments & {remove_events} events"
+        f"Removed {removed_assignments} assignments & {removed_events} events"
     )
+
+def log_ram_usage() -> None:
+    process = psutil.Process()
+    root = process
+
+    # Include the API and launcher when started through this project's run.py.
+    for parent in process.parents():
+        try:
+            if (
+                Path(parent.cwd()).resolve() == CALENDAR_PATH.parent
+                and any(Path(arg).name == "run.py" for arg in parent.cmdline()[1:])
+            ):
+                root = parent
+                break
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    try:
+        processes = [root] + root.children(recursive=True)
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        processes = [process]
+
+    total_ram = 0
+    for proc in processes:
+        try:
+            total_ram += proc.memory_info().rss
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    Logger.log(
+        Logger.LogType.INFO,
+        Logger.System.SYSTEM,
+        f"Total RAM usage: {total_ram / (1024 ** 2):.2f} MB"
+    )
+
 
 def run_scheduler():
     init_db()
@@ -86,6 +132,16 @@ def run_scheduler():
     Logger.initialize()
 
     scheduler = BlockingScheduler()
+
+    scheduler.add_job(
+        log_ram_usage,
+        "interval",
+        minutes=1,
+        next_run_time=datetime.now(),
+        id="ram_usage",
+        max_instances=1,
+        coalesce=True
+    )
 
     scheduler.add_job(
         sync_assignments,
@@ -120,7 +176,7 @@ def run_scheduler():
     scheduler.add_job(
         NotificationWorker.send_notification,
         "interval",
-        minute=1,
+        minutes=1,
         timezone="America/Chicago",
         id="daily_notifications",
         max_instances=1,
