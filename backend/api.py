@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
             Logger.System.SYSTEM,
             "Shutting Down Server..."
         )
-        Logger.flush()
+        Logger.flush() # System is usually force-quit before this log is complete.
 
 
 app = FastAPI(lifespan=lifespan)
