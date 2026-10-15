@@ -1,9 +1,11 @@
 import sqlite3
+from datetime import date as Date
 from pathlib import Path
+from typing import Any
 
-DB_PATH = Path(__file__).resolve().parent.parent / "data" / "database.db"
+DB_PATH: Path = Path(__file__).resolve().parent.parent / "data" / "database.db"
 
-def get_connection():
+def get_connection() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     connection = sqlite3.connect(DB_PATH)
@@ -11,7 +13,7 @@ def get_connection():
     return connection
 
 
-def init_db():
+def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     connection = get_connection()
@@ -48,7 +50,7 @@ def init_db():
         connection.close()
 
 
-def save_assignment(assignment):
+def save_assignment(assignment: dict[str, Any]) -> None:
     connection = get_connection()
 
     try:
@@ -88,13 +90,13 @@ def get_assignments(
     end: str | None = None,
     submitted: bool | None = None,
     limit: int = 100
-):
+) -> list[dict[str, Any]]:
     if not 1 <= limit <= 500:
         raise ValueError("Limit must be between 1 and 500")
 
     query = "SELECT * FROM assignments"
     conditions = ["due_at IS NOT NULL"]
-    params = []
+    params: list[str | int] = []
 
     if course_code is not None:
         conditions.append("course_code = ?")
@@ -123,7 +125,7 @@ def get_assignments(
     finally:
         connection.close()
 
-def print_assignments():
+def print_assignments() -> None:
     connection = get_connection()
 
     rows = connection.execute("SELECT * FROM assignments").fetchall()
@@ -133,7 +135,7 @@ def print_assignments():
 
     connection.close()
 
-def remove_assignments(date: str):
+def remove_assignments(date: Date) -> int:
     connection = get_connection()
 
     try:
@@ -151,7 +153,7 @@ def remove_assignments(date: str):
     finally:
         connection.close()
 
-def save_events(calendar_name: str, events: list[dict]):
+def save_events(calendar_name: str, events: list[dict[str, Any]]) -> None:
     connection = get_connection()
 
     try:
@@ -191,13 +193,13 @@ def get_events(
     start: str | None = None,
     end: str | None = None,
     limit: int = 100
-):
+) -> list[dict[str, Any]]:
     if not 1 <= limit <= 500:
         raise ValueError("Limit must be between 1 and 500")
 
     query = "SELECT * FROM events"
     conditions = ["due_at IS NOT NULL"]
-    params = []
+    params: list[str | int] = []
 
     if calendar is not None:
         conditions.append("calendar = ?")
@@ -227,7 +229,7 @@ def get_events(
         connection.close()
 
 
-def print_events():
+def print_events() -> None:
     connection = get_connection()
 
     rows = connection.execute("SELECT * FROM events").fetchall()
@@ -237,7 +239,7 @@ def print_events():
 
     connection.close()
 
-def remove_events(date: str):
+def remove_events(date: Date) -> int:
     connection = get_connection()
 
     try:

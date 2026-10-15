@@ -3,6 +3,7 @@ import os
 from datetime import date, datetime, time, timedelta, timezone
 from dotenv import load_dotenv
 from pathlib import Path
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
 
 from ..database import get_assignments
@@ -11,15 +12,15 @@ from ..services.notification import send_notification
 from ..util import to_utc_string
 
 class NotificationWorker:
-    _CHAR_LIMIT = 40
+    _CHAR_LIMIT: ClassVar[int] = 40
 
-    _canvas_url = ""
-    _initialized = False
-    _time_zone = ZoneInfo("UTC")
-    _schedule_path = ""
+    _canvas_url: ClassVar[str | None] = ""
+    _initialized: ClassVar[bool] = False
+    _time_zone: ClassVar[ZoneInfo] = ZoneInfo("UTC")
+    _schedule_path: ClassVar[str | Path] = ""
 
     @classmethod
-    def __build_message(cls, assignments: list[dict]) -> str: # Private Method
+    def __build_message(cls, assignments: list[dict[str, Any]]) -> str: # Private Method
         message = ""
         for assignment in assignments:
             course_name = assignment["course_name"]
@@ -156,7 +157,7 @@ class NotificationWorker:
         day = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")[now.weekday()] # Get day
 
         with open(cls._schedule_path, "r", encoding="utf-8") as file:
-            schedule = json.load(file)
+            schedule: dict[str, dict[str, list[str]]] = json.load(file)
 
         daily = schedule["daily"]
         if day in daily["days"] and current_time in daily["times"]:

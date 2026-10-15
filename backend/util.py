@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-def to_utc_string(value: datetime | None):
+def to_utc_string(value: datetime | None) -> str | None:
     if value is None:
         return None
 

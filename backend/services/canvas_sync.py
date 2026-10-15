@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from ..database import save_assignment
 from .ical_sync import format_date
 
-def sync_assignments_from_canvas():
+def sync_assignments_from_canvas() -> None:
     load_dotenv()
 
     CANVAS_URL = os.getenv("CANVAS_URL")

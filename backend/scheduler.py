@@ -8,7 +8,7 @@ from .workers.canvas_worker import CanvasWorker
 from .workers.log_worker import LogWorker
 from .workers.notification_worker import NotificationWorker      
 
-def run_scheduler():
+def run_scheduler() -> None:
     init_db()
     CalendarWorker.initialize()
     CanvasWorker.initialize()

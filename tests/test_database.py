@@ -1,4 +1,9 @@
-def test_database_initialized(client, db):
+from types import ModuleType
+
+from fastapi.testclient import TestClient
+
+
+def test_database_initialized(client: TestClient, db: ModuleType) -> None:
     connection = db.get_connection()
 
     try:
@@ -14,7 +19,7 @@ def test_database_initialized(client, db):
         connection.close()
 
 
-def test_insert_assignment(db):
+def test_insert_assignment(db: ModuleType) -> None:
     assignment = {
         "id": "123456",
         "course_code": 235,
@@ -36,7 +41,7 @@ def test_insert_assignment(db):
     assert results[0]["course_code"] == 235
 
 
-def test_update_assignment(db):
+def test_update_assignment(db: ModuleType) -> None:
     assignment = {
         "id": "123456",
         "course_code": 235,
@@ -61,7 +66,7 @@ def test_update_assignment(db):
     assert results[0]["due_at"] == "2026-10-15T23:59:00Z"
 
 
-def test_submitted_filter(db):
+def test_submitted_filter(db: ModuleType) -> None:
     assignment = {
         "id": "123456",
         "course_code": 235,

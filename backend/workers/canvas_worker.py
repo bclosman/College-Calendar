@@ -1,5 +1,6 @@
 import time as time_module
 from datetime import date, timedelta
+from typing import ClassVar
 
 from ..database import remove_assignments
 from ..services.canvas_sync import sync_assignments_from_canvas
@@ -8,11 +9,11 @@ from ..services.logger import Logger
 from .calendar_worker import CalendarWorker
 
 class CanvasWorker:
-    _initialized = False
-    _REMOVAL_CUTOFF = 46 # Days
+    _initialized: ClassVar[bool] = False
+    _REMOVAL_CUTOFF: ClassVar[int] = 46 # Days
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> None:
         if cls._initialized:
             return
         
@@ -20,7 +21,7 @@ class CanvasWorker:
         cls._initialized = True
 
     @classmethod
-    def sync_assignments(cls):
+    def sync_assignments(cls) -> None:
         if not cls._initialized:
             raise RuntimeError("Call CanvasWorker.initialize() before CanvasWorker.sync_assignments()!")
         
@@ -45,7 +46,7 @@ class CanvasWorker:
             )
         
     @classmethod
-    def remove_old_assignments(cls):
+    def remove_old_assignments(cls) -> None:
         if not cls._initialized:
             raise RuntimeError("Call CanvasWorker.initialize() before CanvasWorker.remove_old_assignments()!")
         

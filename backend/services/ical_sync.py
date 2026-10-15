@@ -4,9 +4,10 @@ import recurring_ical_events
 import requests
 from datetime import date, datetime, timedelta, timezone
 from icalendar import Calendar
+from typing import Any
 from ..database import save_assignment, save_events
 
-def format_date(_date: any):
+def format_date(_date: date | datetime | None) -> str | None:
     if isinstance(_date, datetime):
         return _date.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     elif isinstance(_date, date):
@@ -17,12 +18,12 @@ def format_date(_date: any):
         raise ValueError("Error: Invalid Date Format")
 
 
-def fetch_events(url: str) -> list[dict]:
+def fetch_events(url: str) -> list[dict[str, Any]]:
     response = requests.get(url, timeout=20)
     response.raise_for_status()
 
     calendar = Calendar.from_ical(response.content)
-    events = []
+    events: list[dict[str, Any]] = []
 
     # Define how far to retrieve events
     today = date.today()
@@ -74,7 +75,7 @@ def fetch_events(url: str) -> list[dict]:
     return events
 
 
-def sync_assignments_from_ical(canvas_url: str):
+def sync_assignments_from_ical(canvas_url: str) -> None:
     events = fetch_events(canvas_url)
 
     for event in events:
@@ -107,7 +108,7 @@ def sync_assignments_from_ical(canvas_url: str):
                 "url": url
             })
 
-def sync_calendar(url: str, calendar_name: str):
+def sync_calendar(url: str, calendar_name: str) -> None:
     events = fetch_events(url)
     save_events(calendar_name, events)
 

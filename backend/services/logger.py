@@ -4,6 +4,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
 from queue import Queue
+from threading import Thread
+from typing import ClassVar
 
 class Colors():
     RESET = '\033[0m'
@@ -20,7 +22,7 @@ class Colors():
     WHITE = '\033[37m'
 
     @staticmethod
-    def remove_color(text: str):
+    def remove_color(text: str) -> str:
         ansi_regex = r'\x1b\[[0-9;]*m'
         return re.sub(ansi_regex, '', text)
 
@@ -35,10 +37,13 @@ class Logger():
         DATABASE = f"{Colors.WHITE}[{Colors.CYAN}DATABASE{Colors.WHITE}]{Colors.RESET}"
         SYSTEM = f"{Colors.WHITE}[SYSTEM]{Colors.RESET}"
 
-    _initialized = False
+    _initialized: ClassVar[bool] = False
+    _path: ClassVar[str]
+    _queue: ClassVar[Queue[dict[str, str]]]
+    _thread: ClassVar[Thread]
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> None:
         if cls._initialized:
             return
 
@@ -51,7 +56,7 @@ class Logger():
         cls._thread = LogWorker.run()
 
     @classmethod
-    def log(cls, log_type: Logger.LogType, system: Logger.System, message: str, use_colors=True):
+    def log(cls, log_type: str, system: str, message: str, use_colors: bool = True) -> None:
         if not cls._initialized:
             raise RuntimeError(
                 "Call Logger.initialize() before Logger.log()"
@@ -75,7 +80,7 @@ class Logger():
         cls._queue.put(_log)
 
     @classmethod
-    def write_from_queue(cls):
+    def write_from_queue(cls) -> None:
         if not cls._initialized:
             raise RuntimeError(
                 "Call Logger.initialize() before Logger.log()"
@@ -89,7 +94,7 @@ class Logger():
             cls._queue.task_done()
 
     @classmethod
-    def flush(cls):
+    def flush(cls) -> None:
         cls._queue.join()
     
 if __name__ == "__main__":

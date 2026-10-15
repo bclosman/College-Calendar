@@ -1,12 +1,19 @@
 import os
 import requests
 from dotenv import load_dotenv
+from typing import Any
 from .logger import Logger
 
-def send_notification(title, message, priority=0, url=None, url_title=None):
+def send_notification(
+    title: str,
+    message: str,
+    priority: int = 0,
+    url: str | None = None,
+    url_title: str | None = None
+) -> dict[str, Any]:
     load_dotenv()
 
-    data = {
+    data: dict[str, str | int | None] = {
         "token": os.getenv("PUSHOVER_APP_KEY"),
         "user": os.getenv("PUSHOVER_USER_KEY"),
         "title": title,

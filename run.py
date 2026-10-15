@@ -2,16 +2,17 @@ import subprocess
 import sys
 import time
 import webbrowser
+from collections.abc import Sequence
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
 from .backend.services.logger import Logger
 
-ROOT = Path(__file__).resolve().parent
-URL = "http://localhost:8000/"
+ROOT: Path = Path(__file__).resolve().parent
+URL: str = "http://localhost:8000/"
 
-def open_frontend(processes, timeout: float = 15) -> None:
+def open_frontend(processes: Sequence[subprocess.Popen[bytes]], timeout: float = 15) -> None:
     deadline = time.monotonic() + timeout
 
     while time.monotonic() < deadline:
@@ -34,8 +35,8 @@ def open_frontend(processes, timeout: float = 15) -> None:
     print(f"Frontend startup timed out. Once the API is ready, open {URL}") # prints if failed to open
 
 
-def main():
-    processes = []
+def main() -> None:
+    processes: list[subprocess.Popen[bytes]] = []
 
     try:
         # Start FastAPI

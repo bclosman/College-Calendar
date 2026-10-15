@@ -1,4 +1,9 @@
-def test_get_assignments(client, db):
+from types import ModuleType
+
+from fastapi.testclient import TestClient
+
+
+def test_get_assignments(client: TestClient, db: ModuleType) -> None:
     db.save_assignment({
         "id": "123456",
         "course_code": 235,
@@ -20,7 +25,7 @@ def test_get_assignments(client, db):
     assert data[0]["name"] == "Homework 4"
 
 
-def test_api_course_filter(client, db):
+def test_api_course_filter(client: TestClient, db: ModuleType) -> None:
     for course_code in [235, 310]:
         db.save_assignment({
             "id": f"123{course_code}",
@@ -46,7 +51,7 @@ def test_api_course_filter(client, db):
     assert data[0]["course_code"] == 235
 
 
-def test_invalid_limit(client):
+def test_invalid_limit(client: TestClient) -> None:
     response = client.get(
         "/api/assignments",
         params={"limit": -1}

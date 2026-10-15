@@ -1,17 +1,18 @@
 import psutil
 from pathlib import Path
 from threading import Thread
+from typing import NoReturn
 
 from ..services.logger import Logger
 
 class LogWorker:
     @staticmethod
-    def _process_queue():
+    def _process_queue() -> NoReturn:
         while True:
             Logger.write_from_queue()
 
     @staticmethod
-    def run():
+    def run() -> Thread:
         thread = Thread(
             target=LogWorker._process_queue,
             name="logger",

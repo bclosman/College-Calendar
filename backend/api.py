@@ -1,7 +1,9 @@
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from fastapi import APIRouter, FastAPI, Query
 from fastapi.responses import FileResponse
 
@@ -18,7 +20,7 @@ def get_assignments(
     end: datetime | None = None,
     submitted: bool | None = None,
     limit: int = Query(100, ge=1, le=500)
-):
+) -> list[dict[str, Any]]:
     return database.get_assignments(
         course_code=course_code,
         start=to_utc_string(start),
@@ -35,7 +37,7 @@ def get_events(
     start: datetime | None = None,
     end: datetime | None = None,
     limit: int = Query(100, ge=1, le=500)
-):
+) -> list[dict[str, Any]]:
     return database.get_events(
         calendar=calendar,
         name=name,
@@ -46,7 +48,7 @@ def get_events(
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Logger.initialize()
     Logger.log(
         Logger.LogType.INFO,
@@ -70,12 +72,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)
 
-FRONTEND_PATH = (
+FRONTEND_PATH: Path = (
     Path(__file__).resolve().parent.parent
     / "frontend" / "index.html"
 )
 
 
 @app.get("/")
-def frontend():
+def frontend() -> FileResponse:
     return FileResponse(FRONTEND_PATH)

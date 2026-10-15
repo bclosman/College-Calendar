@@ -2,25 +2,26 @@ import json
 import time as time_module
 from datetime import date, timedelta
 from pathlib import Path
+from typing import ClassVar
 
 from ..database import remove_events
 from ..services.ical_sync import sync_calendar
 from ..services.logger import Logger
 
 class CalendarWorker:
-    _REMOVAL_CUTOFF = 46 # Days
-    _calendars_path = None
-    _initialized = False
+    _REMOVAL_CUTOFF: ClassVar[int] = 46 # Days
+    _calendars_path: ClassVar[Path | None] = None
+    _initialized: ClassVar[bool] = False
 
     @classmethod
-    def __get_calendars(cls):
+    def __get_calendars(cls) -> list[dict[str, str]]:
         with open(cls._calendars_path, "r", encoding="utf-8") as file:
-            calendars = json.load(file)
+            calendars: dict[str, list[dict[str, str]]] = json.load(file)
     
         return calendars["calendars"]
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> None:
         if cls._initialized:
             return
         
@@ -28,7 +29,7 @@ class CalendarWorker:
         cls._initialized = True
 
     @classmethod
-    def get_calendar_url(cls, name: str):
+    def get_calendar_url(cls, name: str) -> str:
         if not cls._initialized:
             raise RuntimeError("Call CalendarWorker.initialize() before CalendarWorker.get_calendar_url()")
         
@@ -40,7 +41,7 @@ class CalendarWorker:
         raise ValueError(f"Calendar '{name}' not found")
     
     @classmethod
-    def sync_events(cls):
+    def sync_events(cls) -> None:
         if not cls._initialized:
             raise RuntimeError("Call CalendarWorker.initialize() before CalendarWorker.sync_events()")
         
@@ -58,7 +59,7 @@ class CalendarWorker:
             )  
 
     @classmethod
-    def remove_old_events(cls):
+    def remove_old_events(cls) -> None:
         if not cls._initialized:
             raise RuntimeError("Call CalendarWorker.initialize() before CalendarWorker.remove_old_events()")
         
