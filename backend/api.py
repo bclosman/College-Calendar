@@ -2,22 +2,10 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Query
 
-from backend import database
+from .database import get_assignments, get_events
+from .util import to_utc_string
 
 router = APIRouter(prefix="/api")
-
-
-def to_utc_string(value: datetime | None):
-    if value is None:
-        return None
-
-    if value.tzinfo is None:
-        raise HTTPException(422, "Timezone is required")
-
-    return value.astimezone(timezone.utc).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
-    )
-
 
 @router.get("/assignments")
 def get_assignments(
@@ -27,7 +15,7 @@ def get_assignments(
     submitted: bool | None = None,
     limit: int = Query(100, ge=1, le=500)
 ):
-    return database.get_assignments(
+    return get_assignments(
         course_code=course_code,
         start=to_utc_string(start),
         end=to_utc_string(end),
@@ -44,7 +32,7 @@ def get_events(
     end: datetime | None = None,
     limit: int = Query(100, ge=1, le=500)
 ):
-    return database.get_events(
+    return get_events(
         calendar=calendar,
         name=name,
         start=to_utc_string(start),

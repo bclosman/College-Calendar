@@ -41,9 +41,6 @@ def send_notification(title, message, priority=0, url=None, url_title=None):
 
     return response.json()
 
-def notification_worker():
-    pass
-
 if __name__ == "__main__":
     send_notification(
         title="Calendar Test",

@@ -13,6 +13,7 @@ data/*
 
 # environment
 calendars.json
+notification_schedule.json
 **/*.env
 
 # Logs
