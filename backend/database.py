@@ -133,7 +133,7 @@ def print_assignments():
 
     connection.close()
 
-def remove_assignments(date: str, utc_date: str):
+def remove_assignments(date: str):
     connection = get_connection()
 
     try:
@@ -142,12 +142,9 @@ def remove_assignments(date: str, utc_date: str):
             row_count = connection.execute("""
                 DELETE FROM assignments
                 WHERE
-                    (LENGTH(due_at) = 10 AND due_at < ?)
-                    OR
-                    (LENGTH(due_at) > 10 AND due_at < ?)
+                    (due_at < ?)
             """, (
                 date.isoformat(),
-                utc_date
             )).rowcount
 
             return row_count

@@ -1,102 +1,19 @@
-import json
-import os
-import time as time_module
-from canvasapi import exceptions
-from datetime import date, datetime, time, timedelta, timezone
-from dotenv import load_dotenv
+from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
-from pathlib import Path
-from zoneinfo import ZoneInfo
 
-from .database import init_db, get_assignments, remove_assignments, remove_events
-from .services.ical_sync import sync_assignments_from_ical, sync_calendar
-from .services.canvas_sync import sync_assignments_from_canvas
+from .database import init_db 
 from .services.logger import Logger
-from .services.notification import send_notification
 from .workers.calendar_worker import CalendarWorker
+from .workers.canvas_worker import CanvasWorker
 from .workers.log_worker import LogWorker
-from .workers.notification_worker import NotificationWorker
-
-CALENDAR_PATH = Path(__file__).resolve().parent.parent / "calendars.json"
-
-def get_calendars():
-    with open(CALENDAR_PATH, "r", encoding="utf-8") as file:
-        calendars = json.load(file)
-    
-    return calendars
-
-def get_calendar_url(name: str) -> str:
-    calendars = get_calendars()
-    for calendar in calendars["calendars"]:
-        if calendar["name"] == name:
-            return calendar["url"]
-
-    raise ValueError(f"Calendar '{name}' not found")
-
-def sync_assignments():
-    start_time = time_module.perf_counter()
-
-    try:
-        sync_assignments_from_canvas()
-    except:
-        Logger.log(
-            Logger.LogType.WARNING,
-            Logger.System.DATABASE,
-            "Canvas API Failed! Using iCal..."
-        )
-        canvas_url = get_calendar_url("Canvas")
-        sync_assignments_from_ical(canvas_url)
-
-    duration = time_module.perf_counter() - start_time
-    Logger.log(
-            Logger.LogType.INFO,
-            Logger.System.DATABASE,
-            f"Canvas took {duration:.6f} seconds to sync!"
-        )    
-
-def sync_events():
-    calendars = get_calendars()
-    for calendar in calendars["calendars"]:
-        start_time = time_module.perf_counter()
-
-        sync_calendar(calendar["url"], calendar["name"])
-        
-        duration = time_module.perf_counter() - start_time
-        Logger.log(
-            Logger.LogType.INFO,
-            Logger.System.DATABASE,
-            f"{calendar["name"]} Calendar took {duration:.6f} seconds to sync!"
-        )        
-
-def remove_old():
-    load_dotenv()
-
-    local_tz = ZoneInfo(os.getenv("TIME_ZONE"))
-    today = datetime.now(local_tz).date()
-
-    cutoff = today - timedelta(days=46)
-
-    utc_cutoff = datetime.combine(
-            cutoff, 
-            time.min, 
-            tzinfo=local_tz
-        ).astimezone(timezone.utc).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        )
-    
-    removed_assignments = remove_assignments(cutoff, utc_cutoff)
-    removed_events = remove_events(cutoff, utc_cutoff)
-    Logger.log(
-        Logger.LogType.INFO,
-        Logger.System.DATABASE,
-        f"Removed {removed_assignments} assignments & {removed_events} events"
-    )
+from .workers.notification_worker import NotificationWorker      
 
 def run_scheduler():
     init_db()
-    NotificationWorker.initialize()
     CalendarWorker.initialize()
+    CanvasWorker.initialize()
     Logger.initialize()
+    NotificationWorker.initialize()
 
     scheduler = BlockingScheduler()
 
@@ -111,7 +28,7 @@ def run_scheduler():
     )
 
     scheduler.add_job(
-        sync_assignments,
+        CanvasWorker.sync_assignments,
         "interval",
         minutes=5,
         next_run_time=datetime.now(),
@@ -121,7 +38,7 @@ def run_scheduler():
     )
 
     scheduler.add_job(
-        sync_events,
+        CalendarWorker.sync_events,
         "interval",
         minutes=5,
         next_run_time=datetime.now(),
@@ -136,6 +53,16 @@ def run_scheduler():
         minutes=60,
         next_run_time=datetime.now(),
         id="remove_events",
+        max_instances=1,
+        coalesce=True
+    )
+
+    scheduler.add_job(
+        CanvasWorker.remove_old_assignments,
+        "interval",
+        minutes=60,
+        next_run_time=datetime.now(),
+        id="remove_assignments",
         max_instances=1,
         coalesce=True
     )
