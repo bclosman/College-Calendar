@@ -47,6 +47,9 @@ class Logger():
         cls._queue = Queue()
         cls._initialized = True
 
+        from ..workers.log_worker import LogWorker # prevent circular import
+        cls._thread = LogWorker.run()
+
     @classmethod
     def log(cls, log_type: Logger.LogType, system: Logger.System, message: str, use_colors=True):
         if not cls._initialized:
@@ -79,8 +82,15 @@ class Logger():
             )
         
         _log = cls._queue.get()
-        with open(cls._path, "a") as file:
-            file.write(_log["message"])
+        try:
+            with open(cls._path, "a") as file:
+                file.write(_log["message"])
+        finally:
+            cls._queue.task_done()
+
+    @classmethod
+    def flush(cls):
+        cls._queue.join()
     
 if __name__ == "__main__":
     Logger.log(Logger.LogType.INFO, Logger.System.NOTIFICATION, "Test Notification\nThis is a test")
