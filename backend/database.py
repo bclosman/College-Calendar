@@ -89,7 +89,8 @@ def get_assignments(
     start: str | None = None,
     end: str | None = None,
     submitted: bool | None = None,
-    limit: int = 100
+    limit: int = 100,
+    offset: int = 0
 ) -> list[dict[str, Any]]:
     if not 1 <= limit <= 500:
         raise ValueError("Limit must be between 1 and 500")
@@ -115,8 +116,8 @@ def get_assignments(
         params.append((int)(submitted))
 
     query += " WHERE " + " AND ".join(conditions)
-    query += " ORDER BY due_at ASC LIMIT ?"
-    params.append(limit)
+    query += " ORDER BY due_at ASC, id ASC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
 
     connection = get_connection()
     try:
@@ -192,13 +193,14 @@ def get_events(
     name: str | None = None,
     start: str | None = None,
     end: str | None = None,
-    limit: int = 100
+    limit: int = 100,
+    offset: int = 0
 ) -> list[dict[str, Any]]:
     if not 1 <= limit <= 500:
         raise ValueError("Limit must be between 1 and 500")
 
     query = "SELECT * FROM events"
-    conditions = ["due_at IS NOT NULL"]
+    conditions = ["start IS NOT NULL"]
     params: list[str | int] = []
 
     if calendar is not None:
@@ -218,8 +220,8 @@ def get_events(
         params.append(end)
 
     query += " WHERE " + " AND ".join(conditions)
-    query += " ORDER BY start ASC LIMIT ?"
-    params.append(limit)
+    query += " ORDER BY start ASC, id ASC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
 
     connection = get_connection()
     try:

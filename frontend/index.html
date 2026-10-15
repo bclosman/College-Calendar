@@ -1,38 +1,74 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
-    <title>Calendar Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>College Calendar</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/layout.css">
+  <script src="/static/app.js" defer></script>
 </head>
+
 <body>
-    <h1>Upcoming Assignments</h1>
-    <ul id="assignments"></ul>
-
-    <script>
-        async function loadAssignments() {
-            const response = await fetch("/api/assignments");
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch assignments");
-            }
-
-            const assignments = await response.json();
-            const list = document.getElementById("assignments");
-
-            list.replaceChildren();
-
-            for (const assignment of assignments) {
-                const item = document.createElement("li");
-                item.textContent =
-                    `${assignment.course_name}: ${assignment.name}`;
-                list.appendChild(item);
-            }
-        }
-
-        loadAssignments().catch(console.error);
-    </script>
+  <p id="sync-status" class="sr-only" role="status"></p>
+  <main>
+    <div id="error" class="error" role="alert" hidden></div>
+    <div class="dashboard">
+      <section class="panel calendar-panel" aria-label="Calendar">
+        <div class="panel-heading">
+          <div class="month-heading">
+            <h2 id="month-label">Calendar</h2><span id="month-count" class="muted"></span>
+          </div>
+          <div class="month-controls"><button id="clear-day" class="text-button" hidden>Clear date filter
+              ×</button><button id="today" class="button">Today</button>
+            <div class="arrow-group"><button id="previous" class="icon-button"
+                aria-label="Previous month">‹</button><button id="next" class="icon-button"
+                aria-label="Next month">›</button></div>
+          </div>
+        </div>
+        <div id="calendar-filters" class="calendar-filters" aria-label="Visible calendars"></div>
+        <p id="calendar-loading" class="loading" role="status">Loading your calendars…</p>
+        <div class="calendar-scroll">
+          <div class="weekdays" aria-hidden="true">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div id="calendar-grid" class="calendar-grid" role="grid" aria-label="Month calendar"></div>
+        </div>
+      </section>
+      <aside class="panel assignments-panel" aria-labelledby="assignments-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">STAY ON TRACK</p>
+            <h2 id="assignments-title">Assignments <span id="assignment-count" class="count">0</span></h2>
+          </div><span class="assignment-symbol" aria-hidden="true">✓</span>
+        </div>
+        <div class="assignment-tools"><label class="search"><span aria-hidden="true">⌕</span><input id="search"
+              type="search" aria-label="Search assignments" placeholder="Find an assignment…"></label><label
+            class="sr-only" for="course">Filter by course</label><select id="course">
+            <option value="">All courses</option>
+          </select>
+          <div class="tabs" role="group" aria-label="Assignment status"><button data-view="upcoming"
+              aria-pressed="true">Upcoming</button><button data-view="overdue"
+              aria-pressed="false">Overdue</button><button data-view="all" aria-pressed="false">All</button></div>
+          <div id="selected-date" class="selected-date" hidden></div>
+        </div>
+        <div id="assignment-list" class="assignment-list" aria-live="polite">
+          <p class="empty">Loading your assignments…</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <dialog id="event-dialog" aria-labelledby="event-title">
+    <div class="dialog-heading">
+      <p class="eyebrow" id="event-calendar"></p><button id="close-dialog" class="icon-button"
+        aria-label="Close event details">×</button>
+    </div>
+    <h2 id="event-title"></h2>
+    <p id="event-time" class="muted"></p><a id="event-link" class="button primary" target="_blank"
+      rel="noopener noreferrer">Open event ↗</a>
+  </dialog>
 </body>
+
 </html>

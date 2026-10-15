@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from .backend.services.logger import Logger
+from backend.services.logger import Logger
 
 ROOT: Path = Path(__file__).resolve().parent
 URL: str = "http://localhost:8000/"
@@ -36,6 +36,7 @@ def open_frontend(processes: Sequence[subprocess.Popen[bytes]], timeout: float =
 
 
 def main() -> None:
+    Logger.initialize()
     processes: list[subprocess.Popen[bytes]] = []
 
     try:
