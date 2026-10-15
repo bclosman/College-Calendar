@@ -34,7 +34,7 @@ def main():
         api = subprocess.Popen(
             [
                 sys.executable, "-m", "uvicorn",
-                "backend.main:app",
+                "backend.api:app",
                 "--host", "0.0.0.0",
                 "--port", "8000"
             ],
