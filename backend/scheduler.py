@@ -1,6 +1,5 @@
 import json
 import os
-import psutil
 import time as time_module
 from canvasapi import exceptions
 from datetime import date, datetime, time, timedelta, timezone
@@ -14,6 +13,7 @@ from .services.ical_sync import sync_assignments_from_ical, sync_calendar
 from .services.canvas_sync import sync_assignments_from_canvas
 from .services.logger import Logger
 from .services.notification import send_notification
+from .workers.log_worker import LogWorker
 from .workers.notification_worker import NotificationWorker
 
 CALENDAR_PATH = Path(__file__).resolve().parent.parent / "calendars.json"
@@ -91,41 +91,6 @@ def remove_old():
         f"Removed {removed_assignments} assignments & {removed_events} events"
     )
 
-def log_ram_usage() -> None:
-    process = psutil.Process()
-    root = process
-
-    # Include the API and launcher when started through this project's run.py.
-    for parent in process.parents():
-        try:
-            if (
-                Path(parent.cwd()).resolve() == CALENDAR_PATH.parent
-                and any(Path(arg).name == "run.py" for arg in parent.cmdline()[1:])
-            ):
-                root = parent
-                break
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
-
-    try:
-        processes = [root] + root.children(recursive=True)
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
-        processes = [process]
-
-    total_ram = 0
-    for proc in processes:
-        try:
-            total_ram += proc.memory_info().rss
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
-
-    Logger.log(
-        Logger.LogType.INFO,
-        Logger.System.SYSTEM,
-        f"Total RAM usage: {total_ram / (1024 ** 2):.2f} MB"
-    )
-
-
 def run_scheduler():
     init_db()
     NotificationWorker.initialize()
@@ -134,7 +99,7 @@ def run_scheduler():
     scheduler = BlockingScheduler()
 
     scheduler.add_job(
-        log_ram_usage,
+        LogWorker.log_ram_usage,
         "interval",
         minutes=1,
         next_run_time=datetime.now(),
