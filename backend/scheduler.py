@@ -13,6 +13,7 @@ from .services.ical_sync import sync_assignments_from_ical, sync_calendar
 from .services.canvas_sync import sync_assignments_from_canvas
 from .services.logger import Logger
 from .services.notification import send_notification
+from .workers.calendar_worker import CalendarWorker
 from .workers.log_worker import LogWorker
 from .workers.notification_worker import NotificationWorker
 
@@ -94,6 +95,7 @@ def remove_old():
 def run_scheduler():
     init_db()
     NotificationWorker.initialize()
+    CalendarWorker.initialize()
     Logger.initialize()
 
     scheduler = BlockingScheduler()
@@ -129,11 +131,11 @@ def run_scheduler():
     )
 
     scheduler.add_job(
-        remove_old,
+        CalendarWorker.remove_old_events,
         "interval",
         minutes=60,
         next_run_time=datetime.now(),
-        id="removal",
+        id="remove_events",
         max_instances=1,
         coalesce=True
     )

@@ -240,7 +240,7 @@ def print_events():
 
     connection.close()
 
-def remove_events(date: str, utc_date: str):
+def remove_events(date: str):
     connection = get_connection()
 
     try:
@@ -249,19 +249,13 @@ def remove_events(date: str, utc_date: str):
                 DELETE FROM events
                 WHERE
                     ("end" IS NOT NULL
-                     AND LENGTH("end") = 10
                      AND "end" <= ?)
                     OR
                     ("end" IS NULL
-                     AND LENGTH("start") = 10
                      AND "start" < ?)
-                    OR
-                    (LENGTH(COALESCE("end", "start")) > 10
-                     AND COALESCE("end", "start") < ?)
             """, (
                 date.isoformat(),
-                date.isoformat(),
-                utc_date
+                date.isoformat()
             )).rowcount
 
             return row_count
