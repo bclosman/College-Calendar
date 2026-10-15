@@ -52,6 +52,8 @@ class NotificationWorker:
 
     @classmethod
     def initialize(cls) -> None:
+        if cls._initialized:
+            return
         load_dotenv()
         cls._canvas_url = os.getenv("CANVAS_URL")
         cls._time_zone = ZoneInfo(os.getenv("TIME_ZONE"))
