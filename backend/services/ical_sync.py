@@ -5,7 +5,9 @@ import requests
 from datetime import date, datetime, timedelta, timezone
 from icalendar import Calendar
 from typing import Any
+
 from ..database import save_assignment, save_events
+from .logger import Logger
 
 def format_date(_date: date | datetime | None) -> str | None:
     if isinstance(_date, datetime):
@@ -18,9 +20,17 @@ def format_date(_date: date | datetime | None) -> str | None:
         raise ValueError("Error: Invalid Date Format")
 
 
-def fetch_events(url: str) -> list[dict[str, Any]]:
+def fetch_events(url: str) -> list[dict[str, Any]] | None:
     response = requests.get(url, timeout=20)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        Logger.log(
+            Logger.LogType.ERROR,
+            Logger.System.ICAL,
+            f"Cannot retrieve calendar!\n{repr(e)}"
+        )
+        return None
 
     calendar = Calendar.from_ical(response.content)
     events: list[dict[str, Any]] = []
@@ -78,6 +88,9 @@ def fetch_events(url: str) -> list[dict[str, Any]]:
 def sync_assignments_from_ical(canvas_url: str) -> None:
     events = fetch_events(canvas_url)
 
+    if events is None:
+        return
+
     for event in events:
         if "assignment" in event["uid"]:
             split = re.split(r' \(| \[', event["title"], maxsplit=1)
@@ -110,6 +123,8 @@ def sync_assignments_from_ical(canvas_url: str) -> None:
 
 def sync_calendar(url: str, calendar_name: str) -> None:
     events = fetch_events(url)
+    if events is None:
+        return
     save_events(calendar_name, events)
 
 if __name__ == "__main__":

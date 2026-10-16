@@ -35,6 +35,7 @@ class Logger():
     class System:
         NOTIFICATION = f"{Colors.WHITE}[{Colors.MAGENTA}NOTIFICATION{Colors.WHITE}]{Colors.RESET}"
         DATABASE = f"{Colors.WHITE}[{Colors.CYAN}DATABASE{Colors.WHITE}]{Colors.RESET}"
+        ICAL = f"{Colors.WHITE}[{Colors.BLUE}ICAL{Colors.WHITE}]{Colors.RESET}"
         SYSTEM = f"{Colors.WHITE}[SYSTEM]{Colors.RESET}"
 
     _initialized: ClassVar[bool] = False

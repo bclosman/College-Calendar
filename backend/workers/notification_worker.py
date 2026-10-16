@@ -14,7 +14,7 @@ from ..util import to_utc_string
 class NotificationWorker:
     _CHAR_LIMIT: ClassVar[int] = 40
 
-    _canvas_url: ClassVar[str | None] = ""
+    _canvas_url: ClassVar[str | None] = None
     _initialized: ClassVar[bool] = False
     _time_zone: ClassVar[ZoneInfo] = ZoneInfo("UTC")
     _schedule_path: ClassVar[str | Path] = ""
@@ -89,8 +89,8 @@ class NotificationWorker:
                 url = assignments[0]["url"]
                 url_title = "View Assignment"
             else:
-                url = cls._canvas_url
-                url_title = "View Assignments"
+                url = cls._canvas_url if cls._canvas_url is not None else None
+                url_title = "View Assignments" if cls._canvas_url is not None else None
 
             send_notification(
                 title="Weekly Assignemtns",
@@ -133,8 +133,8 @@ class NotificationWorker:
                 url = assignments[0]["url"]
                 url_title = "View Assignment"
             else:
-                url = cls._canvas_url
-                url_title = "View Assignments"
+                url = cls._canvas_url if cls._canvas_url is not None else None
+                url_title = "View Assignments" if cls._canvas_url is not None else None
 
             send_notification(
                 title="Daily Assignemtns",

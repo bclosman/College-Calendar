@@ -49,7 +49,9 @@ def send_notification(
     return response.json()
 
 if __name__ == "__main__":
+    Logger.initialize()
     send_notification(
         title="Calendar Test",
         message="Your notification system is working!"
     )
+    Logger.flush()

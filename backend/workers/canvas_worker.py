@@ -59,3 +59,9 @@ class CanvasWorker:
             Logger.System.DATABASE,
             f"Removed {count} assignments."
         )
+
+if __name__ == "__main__":
+    CanvasWorker.initialize()
+    Logger.initialize()
+    CanvasWorker.sync_assignments()
+    Logger.flush()
