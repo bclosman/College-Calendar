@@ -156,16 +156,23 @@ class NotificationWorker:
         current_time = now.strftime("%H:%M") # Get time as HH:MM
         day = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")[now.weekday()] # Get day
 
-        with open(cls._schedule_path, "r", encoding="utf-8") as file:
-            schedule: dict[str, dict[str, list[str]]] = json.load(file)
+        try:
+            with open(cls._schedule_path, "r", encoding="utf-8") as file:
+                schedule: dict[str, dict[str, list[str]]] = json.load(file)
 
-        daily = schedule["daily"]
-        if day in daily["days"] and current_time in daily["times"]:
-            cls.__day_notification()
+                daily = schedule["daily"]
+            if day in daily["days"] and current_time in daily["times"]:
+                cls.__day_notification()
 
-        weekly = schedule["weekly"]
-        if day in weekly["days"] and current_time in weekly["times"]:
-            cls.__week_notification()
+            weekly = schedule["weekly"]
+            if day in weekly["days"] and current_time in weekly["times"]:
+                cls.__week_notification()
+        except:
+            Logger.log(
+                Logger.LogType.ERROR,
+                Logger.System.NOTIFICATION,
+                "Unable to process notification schedule!"
+            )
 
 if __name__ == "__main__":
     Logger.initialize()
