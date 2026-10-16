@@ -38,7 +38,7 @@ class Logger():
         SYSTEM = f"{Colors.WHITE}[SYSTEM]{Colors.RESET}"
 
     _initialized: ClassVar[bool] = False
-    _path: ClassVar[str]
+    _path: ClassVar[str] | None
     _queue: ClassVar[Queue[dict[str, str]]]
     _thread: ClassVar[Thread]
 
@@ -48,7 +48,12 @@ class Logger():
             return
 
         load_dotenv()
-        cls._path = str(Path(__file__).resolve().parent.parent.parent) + '\\' + str(os.getenv("LOG_PATH"))
+        log_path = os.getenv("LOG_PATH")
+        if log_path is not None:
+            cls._path = str(Path(__file__).resolve().parent.parent.parent) + '\\' + str(log_path)
+        else:
+            cls._path = None
+
         cls._queue = Queue()
         cls._initialized = True
 
@@ -83,13 +88,16 @@ class Logger():
     def write_from_queue(cls) -> None:
         if not cls._initialized:
             raise RuntimeError(
-                "Call Logger.initialize() before Logger.log()"
+                "Call Logger.initialize() before Logger.write_from_queue()"
             )
         
-        _log = cls._queue.get()
+        message = cls._queue.get()
         try:
-            with open(cls._path, "a") as file:
-                file.write(_log["message"])
+            if cls._path is not None:
+                with open(cls._path, "a") as file:
+                    file.write(message["message"])
+            else:
+                print(message["message"])
         finally:
             cls._queue.task_done()
 
