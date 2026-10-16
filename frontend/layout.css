@@ -189,6 +189,7 @@ main {
 .focus-week .event-title {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 14px;
   max-height: 28px;
@@ -196,6 +197,7 @@ main {
 
 .focus-week .event:has(.event-time) .event-title {
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   max-height: 14px;
 }
 
@@ -295,6 +297,7 @@ main {
 .assignment-name a {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
