@@ -94,7 +94,14 @@
 
   async function request(url) {
     const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15000) });
-    if (!response.ok) throw new Error(`Unable to load ${url.split("?")[0].split("/").pop()} (${response.status}).`);
+    if (!response.ok) {
+      const error = new Error(`Unable to load ${url.split("?")[0].split("/").pop()} (${response.status}).`);
+      try {
+        const body = await response.json();
+        error.code = body.detail?.code;
+      } catch { /* Non-JSON server errors keep the general error message. */ }
+      throw error;
+    }
     return response.json();
   }
   async function fetchRows(path) {
@@ -106,12 +113,25 @@
       if (page.length < 500) return rows;
     }
   }
+  async function loadCalendarConfig() {
+    try {
+      return await request("/api/calendars");
+    } catch (error) {
+      if (error.code !== "calendar_config_missing") throw error;
+      return {
+        calendars: [...state.calendars],
+        assignment_colors: state.assignmentColors,
+        timezone: state.timezone,
+        warning: "calendars.json was not found. Showing stored events and assignments with saved or default colors. Restore the file in the project folder to resume calendar syncing. The dashboard will check again in five minutes; reload to check sooner."
+      };
+    }
+  }
   async function loadData() {
     if (state.busy) return;
     state.busy = true;
     $("sync-status").textContent = "Updating…";
     try {
-      const [config, assignments, events] = await Promise.all([request("/api/calendars"), fetchRows("/api/assignments?submitted=false"), fetchRows("/api/events")]);
+      const [config, assignments, events] = await Promise.all([loadCalendarConfig(), fetchRows("/api/assignments?submitted=false"), fetchRows("/api/events")]);
       state.calendars = config.calendars;
       state.assignmentColors = config.assignment_colors || {};
       state.timezone = config.timezone || state.timezone;
@@ -123,7 +143,8 @@
         if (!state.calendars.some((calendar) => calendar.name === name)) state.calendars.push({ name, color: colorFor(name) });
       }
       state.loaded = true;
-      $("error").hidden = true;
+      $("error").textContent = config.warning || "";
+      $("error").hidden = !config.warning;
       $("calendar-loading").hidden = true;
       renderFilters(); renderCourses(); renderCalendar(); renderAssignments();
       $("sync-status").textContent = "Updated " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });

@@ -53,3 +53,20 @@ def test_frontend_assets_and_invalid_offset(client: TestClient) -> None:
     assert client.get("/static/app.js").status_code == 200
     assert client.get("/static/styles.css").status_code == 200
     assert client.get("/api/events", params={"offset": -1}).status_code == 422
+
+
+def test_missing_calendar_config_and_recovery(client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    config = tmp_path / "missing-calendars.json"
+    monkeypatch.setattr(api, "CALENDAR_CONFIG_PATH", config)
+    response = client.get("/api/calendars")
+    assert response.status_code == 404
+    assert response.json() == {"detail": {"code": "calendar_config_missing", "message": "calendars.json was not found."}}
+    assert str(tmp_path) not in response.text
+    assert client.get("/api/events").status_code == 200
+    assert client.get("/api/assignments").status_code == 200
+
+    config.write_text(json.dumps({"calendars": [{"name": "Classes", "url": "https://example.com/private", "color": "#527f9b"}]}), encoding="utf-8")
+    response = client.get("/api/calendars")
+    assert response.status_code == 200
+    assert response.json()["calendars"] == [{"name": "Classes", "color": "#527f9b"}]
+    assert "https://example.com/private" not in response.text

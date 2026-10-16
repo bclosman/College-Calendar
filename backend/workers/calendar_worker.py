@@ -14,10 +14,12 @@ class CalendarWorker:
     _initialized: ClassVar[bool] = False
 
     @classmethod
-    def __get_calendars(cls) -> list[dict[str, str]]:
-        with open(cls._calendars_path, "r", encoding="utf-8") as file:
-            calendars: dict[str, list[dict[str, str]]] = json.load(file)
-    
+    def __get_calendars(cls) -> list[dict[str, str]] | None:
+        try:
+            with open(cls._calendars_path, "r", encoding="utf-8") as file:
+                calendars: dict[str, list[dict[str, str]]] = json.load(file)
+        except:
+            return None
         return calendars["calendars"]
 
     @classmethod
@@ -34,6 +36,8 @@ class CalendarWorker:
             raise RuntimeError("Call CalendarWorker.initialize() before CalendarWorker.get_calendar_url()")
         
         calendars = cls.__get_calendars()
+        if calendars is None:
+            return ""
         for calendar in calendars:
             if calendar["name"] == name:
                 return calendar["url"]
@@ -46,6 +50,8 @@ class CalendarWorker:
             raise RuntimeError("Call CalendarWorker.initialize() before CalendarWorker.sync_events()")
         
         calendars = cls.__get_calendars()
+        if calendars is None:
+            return
         for calendar in calendars:
             start_time = time_module.perf_counter()
 

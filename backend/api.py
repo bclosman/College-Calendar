@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from fastapi import APIRouter, FastAPI, Query
+from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -23,8 +23,17 @@ router = APIRouter(prefix="/api")
 @router.get("/calendars")
 def get_calendars() -> dict[str, Any]:
     """Expose display settings without exposing private calendar feed URLs."""
-    with CALENDAR_CONFIG_PATH.open(encoding="utf-8") as file:
-        config = json.load(file)
+    try:
+        with CALENDAR_CONFIG_PATH.open(encoding="utf-8") as file:
+            config = json.load(file)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "calendar_config_missing",
+                "message": "calendars.json was not found."
+            }
+        ) from None
 
     calendars = []
     for calendar in config["calendars"]:
