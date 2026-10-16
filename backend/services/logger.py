@@ -68,7 +68,7 @@ class Logger():
                 "Call Logger.initialize() before Logger.log()"
             )
         
-        if ".ans" not in cls._path:
+        if cls._path is not None and ".ans" not in cls._path:
             use_colors = False
 
         time = f"{Colors.WHITE}[{Colors.GRAY}{datetime.now()}{Colors.WHITE}]{Colors.RESET}"
