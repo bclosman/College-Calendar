@@ -1,0 +1,233 @@
+:root {
+  color-scheme: light;
+}
+
+.theme-toggle {
+  border: 1px solid #b6c8df;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: #d3e3f8;
+}
+
+/* Keep the same source and course colors in both themes. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e6edf7;
+  --muted: #b2c1d4;
+  --line: #35465d;
+  --green: #9ac4ff;
+  background: #0a111c;
+  color: var(--ink);
+}
+
+[data-theme="dark"] body,
+[data-theme="dark"]:fullscreen {
+  background: #0a111c;
+}
+
+[data-theme="dark"] .panel {
+  background: #111b2a;
+  border-color: #3a4c65;
+}
+
+[data-theme="dark"] h2,
+[data-theme="dark"] .assignment-name {
+  color: #f0f5fd;
+}
+
+[data-theme="dark"] .muted,
+[data-theme="dark"] .month-heading .muted,
+[data-theme="dark"] .group-title,
+[data-theme="dark"] .group-title span,
+[data-theme="dark"] .card-bottom,
+[data-theme="dark"] .empty,
+[data-theme="dark"] .loading {
+  color: #bac9dc;
+}
+
+[data-theme="dark"] .button,
+[data-theme="dark"] .icon-button,
+[data-theme="dark"] .theme-toggle {
+  background: #1b2b42;
+  color: #e6effe;
+  border-color: #526986;
+}
+
+[data-theme="dark"] .button:hover,
+[data-theme="dark"] .icon-button:hover,
+[data-theme="dark"] .theme-toggle:hover,
+[data-theme="dark"] .day-number:hover {
+  background: #2b4262;
+}
+
+[data-theme="dark"] .button.primary {
+  background: #305d95;
+  color: white;
+}
+
+[data-theme="dark"] .calendar-toggle {
+  color: #dce7f6;
+  border-color: #526681;
+}
+
+[data-theme="dark"] .calendar-toggle:has(input:not(:checked)) {
+  background: #1a293c;
+  color: #a9b9ce;
+}
+
+[data-theme="dark"] .calendar-toggle input:not(:checked) {
+  background: #111b2a;
+  border-color: #8a9fb9;
+}
+
+[data-theme="dark"] .weekdays {
+  background: #17253a;
+  border-color: #455a76;
+}
+
+[data-theme="dark"] .weekdays span {
+  color: #c5d7ef;
+}
+
+[data-theme="dark"] .day-cell {
+  background: #111b2a;
+  color: #d5e3f6;
+  border-color: #35465d;
+}
+
+[data-theme="dark"] .day-cell.outside {
+  background: #101a2a;
+  color: #a7b9d1;
+}
+
+[data-theme="dark"] .day-cell:nth-child(7n+1),
+[data-theme="dark"] .day-cell:nth-child(7n) {
+  background: #111d2e;
+}
+
+[data-theme="dark"] .focus-week {
+  background: #17263b !important;
+}
+
+[data-theme="dark"] .day-cell.selected {
+  box-shadow: inset 0 0 0 2px #8ebcff;
+}
+
+[data-theme="dark"] .is-today .day-number {
+  background: #37699f;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .event {
+  background: color-mix(in srgb, var(--color) 38%, #18263b);
+  color: #f4f7ff;
+}
+
+[data-theme="dark"] .more,
+[data-theme="dark"] .selected-date,
+[data-theme="dark"] .text-button,
+[data-theme="dark"] .assignment-link {
+  color: #b2d3ff;
+}
+
+[data-theme="dark"] .compact-day .more {
+  background: #253b59;
+  color: #e1eeff;
+}
+
+[data-theme="dark"] .assignment-card {
+  background: color-mix(in srgb, var(--color) 12%, #111b2a);
+  border-color: #415571;
+  border-left-color: var(--color);
+}
+
+[data-theme="dark"] .course-badge {
+  background: color-mix(in srgb, var(--color) 35%, #172438);
+  color: color-mix(in srgb, var(--color) 22%, white);
+}
+
+[data-theme="dark"] .due-status {
+  color: #bdcde1;
+}
+
+[data-theme="dark"] .due-status.late {
+  color: #ffacac;
+}
+
+[data-theme="dark"] .due-status.urgent {
+  color: #ffd19b;
+}
+
+[data-theme="dark"] .count {
+  background: #273f60;
+  color: #e5f0ff;
+}
+
+[data-theme="dark"] .search,
+[data-theme="dark"] select {
+  background: #162338;
+  border-color: #526884;
+}
+
+[data-theme="dark"] .search input,
+[data-theme="dark"] .assignment-tools select {
+  color: #e6edf8;
+}
+
+[data-theme="dark"] .search>span,
+[data-theme="dark"] .search input::placeholder {
+  color: #afc1d9;
+}
+
+[data-theme="dark"] .tabs {
+  background: #1b2b42;
+}
+
+[data-theme="dark"] .tabs button {
+  color: #c8d8ee;
+}
+
+[data-theme="dark"] .tabs button[aria-pressed=true] {
+  background: #31577e;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .assignment-list {
+  scrollbar-color: #6b88ae #111b2a;
+}
+
+[data-theme="dark"] .error {
+  background: #382b1a;
+  border-color: #b28a55;
+  color: #ffe0af;
+}
+
+[data-theme="dark"] dialog {
+  background: #162338;
+  border-color: #708aae;
+  color: #edf4ff;
+}
+
+[data-theme="dark"] dialog::backdrop {
+  background: #030914bf;
+}
+
+[data-theme="dark"] dialog .eyebrow,
+[data-theme="dark"] dialog .muted {
+  color: #c5d6ed;
+}
+
+[data-theme="dark"] .dialog-event-list button {
+  background: color-mix(in srgb, var(--color) 35%, #172438);
+  border-color: color-mix(in srgb, var(--color) 65%, #8297b2);
+  border-left-color: var(--color);
+  color: #f2f6ff;
+}
+
+[data-theme="dark"] .day-event-source {
+  color: color-mix(in srgb, var(--color) 22%, white);
+}

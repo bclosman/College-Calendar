@@ -4,10 +4,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    try {
+      document.documentElement.dataset.theme = localStorage.getItem("college-calendar-theme") === "light" ? "light" : "dark";
+    } catch {
+      document.documentElement.dataset.theme = "dark";
+    }
+  </script>
   <title>College Calendar</title>
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="/static/layout.css">
+  <link rel="stylesheet" href="/static/contrast.css">
+  <link rel="stylesheet" href="/static/dark-mode.css">
   <script src="/static/app.js" defer></script>
 </head>
 
@@ -42,7 +51,7 @@
           <div>
             <p class="eyebrow">STAY ON TRACK</p>
             <h2 id="assignments-title">Assignments <span id="assignment-count" class="count">0</span></h2>
-          </div><span class="assignment-symbol" aria-hidden="true">✓</span>
+          </div><button id="theme-toggle" class="assignment-symbol theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">☾</button>
         </div>
         <div class="assignment-tools"><label class="search"><span aria-hidden="true">⌕</span><input id="search"
               type="search" aria-label="Search assignments" placeholder="Find an assignment…"></label><label

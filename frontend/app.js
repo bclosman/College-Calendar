@@ -3,6 +3,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const palette = ["#527f9b", "#8c72a7", "#5e8971", "#b58a3e", "#ae6a6d", "#638d92", "#9a795e", "#777fb0"];
+  const coursePalette = ["#2e7dac", "#8757ad", "#38825b", "#b87917", "#b84b60", "#2e8591", "#a56c38", "#5f67af"];
   const state = { calendars: [], assignments: [], events: [], hidden: new Set(), assignmentColors: {}, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, month: new Date(), selected: null, view: "upcoming", loaded: false, busy: false };
   let dayFormatter;
 
@@ -35,18 +36,19 @@
     return keyOf(date) + "T" + new Intl.DateTimeFormat("en-GB", { timeZone: state.timezone, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(date);
   }
   function labelDate(key, long = false) { return calendarDate(key).toLocaleDateString("en-US", { weekday: long ? "long" : "short", month: long ? "long" : "short", day: "numeric" }); }
-  function colorFor(name, configured) {
+  function colorFor(name, configured, colors = palette) {
     if (/^#[0-9a-f]{6}$/i.test(configured || "")) return configured;
     let hash = 0;
     for (const char of String(name)) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-    return palette[hash % palette.length];
+    return colors[hash % colors.length];
   }
   function colorElement(element, color) {
     element.style.setProperty("--color", color);
-    element.style.setProperty("--tint", color + "16");
+    element.style.setProperty("--tint", color + "60");
     const channels = [1, 3, 5].map((offset) => parseInt(color.slice(offset, offset + 2), 16));
-    const textColor = "#" + channels.map((channel) => Math.round(channel * 0.65).toString(16).padStart(2, "0")).join("");
+    const textColor = "#" + channels.map((channel) => Math.round(channel * 0.5).toString(16).padStart(2, "0")).join("");
     element.style.setProperty("--color-text", textColor);
+
   }
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -60,7 +62,35 @@
   }
   function calendarColor(name) { return colorFor(name, state.calendars.find((c) => c.name === name)?.color); }
   function courseKey(assignment) { return String(assignment.course_code || assignment.course_name || "Other"); }
-  function assignmentColor(assignment) { return colorFor(courseKey(assignment), state.assignmentColors[courseKey(assignment)]); }
+  function assignmentColor(assignment) { return colorFor(courseKey(assignment), state.assignmentColors[courseKey(assignment)], coursePalette); }
+
+  function assignmentForEvent(event) {
+    if (String(event.calendar).toLowerCase() !== "canvas") return null;
+    const reference = `${event.uid || ""} ${event.url || ""}`;
+    const id = reference.match(/assignment(?:s\/|_)(\d+)/i)?.[1];
+    const assignment = id && state.assignments.find((item) => String(item.id) === id);
+    if (assignment) return assignment;
+    // Completed assignments may no longer appear in the unsubmitted sidebar.
+    const course = String(event.name || "").match(/\b([A-Z]+-\d+\.\d+\.\d+)\b/);
+    return course && (id || /assignment/i.test(reference)) ? { course_code: course[1] } : null;
+  }
+  function eventColor(event) {
+    const assignment = assignmentForEvent(event);
+    return assignment ? assignmentColor(assignment) : calendarColor(event.calendar);
+  }
+  function compactAssignment(event) { return Boolean(assignmentForEvent(event)) && dateOnly(event.start); }
+  function visibleEventsCount(events, available, expanded, small) {
+    const height = (event) => compactAssignment(event) ? (small ? 20 : 23) : expanded ? (small ? 34 : 49) : (small ? 16 : 20);
+    if (events.reduce((sum, event) => sum + height(event), 0) <= available) return events.length;
+    const budget = Math.max(0, available - (small ? 13 : 16));
+    let used = 0, count = 0;
+    for (const event of events) {
+      if (used + height(event) > budget) break;
+      used += height(event);
+      count++;
+    }
+    return count;
+  }
 
   async function request(url) {
     const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15000) });
@@ -180,19 +210,18 @@
       const events = eventsOn(key);
       const rowHeight = gridHeight * weights[Math.floor(i / 7)] / totalWeight;
       const topHeight = small ? 23 : 34;
-      const eventHeight = expanded ? (small ? 34 : 49) : (small ? 16 : 20);
       const compressed = rowHeight < topHeight + (small ? 13 : 16);
       if (compressed) cell.classList.add("compact-day");
       const available = Math.max(0, rowHeight - topHeight);
-      let visibleCount = Math.max(0, Math.floor(available / eventHeight));
-      if (events.length > visibleCount) visibleCount = Math.max(0, Math.floor((available - (small ? 13 : 16)) / eventHeight));
+      const visibleCount = visibleEventsCount(events, available, expanded, small);
       const eventList = element("div", "day-events");
       cell.append(eventList);
       for (const event of events.slice(0, visibleCount)) {
-        const button = element("button", "event");
-        colorElement(button, calendarColor(event.calendar));
+        const compact = compactAssignment(event);
+        const button = element("button", "event" + (compact ? " all-day-assignment" : ""));
+        colorElement(button, eventColor(event));
         if (!dateOnly(event.start) && dateKey(event.start) === key) button.append(element("span", "event-time", clock(event.start).replace(":00", "").replace(" ", "")));
-        if (expanded && dateOnly(event.start)) button.append(element("span", "event-time", "All day"));
+        if (expanded && dateOnly(event.start) && !compact) button.append(element("span", "event-time", "All day"));
         button.append(element("span", "event-title", event.name || "Untitled event"));
         button.title = `${event.calendar}: ${event.name || "Untitled event"}`;
         button.addEventListener("click", () => showEvent(event));
@@ -218,7 +247,7 @@
   function showEvent(event) {
     resetDialog();
     $("event-calendar").textContent = event.calendar;
-    $("event-calendar").style.color = calendarColor(event.calendar);
+    $("event-calendar").style.color = eventColor(event);
     $("event-title").textContent = event.name || "Untitled event";
     $("event-time").textContent = eventDescription(event);
     const url = safeLink(event.url);
@@ -232,7 +261,17 @@
     $("event-title").textContent = labelDate(key, true);
     $("event-time").textContent = `${events.length} events`;
     const list = element("div", "dialog-event-list");
-    for (const event of events) { const button = element("button", "", `${dateOnly(event.start) ? "All day" : clock(event.start)} · ${event.name || "Untitled event"} · ${event.calendar}`); colorElement(button, calendarColor(event.calendar)); button.addEventListener("click", () => showEvent(event)); list.append(button); }
+    for (const event of events) {
+      const button = element("button", "day-event");
+      colorElement(button, eventColor(event));
+      button.append(
+        element("span", "day-event-time", dateOnly(event.start) ? "All day" : clock(event.start)),
+        element("span", "day-event-title", event.name || "Untitled event"),
+        element("span", "day-event-source", event.calendar)
+      );
+      button.addEventListener("click", () => showEvent(event));
+      list.append(button);
+    }
     $("event-dialog").append(list);
     $("event-dialog").showModal();
   }
@@ -291,6 +330,24 @@
     }
   }
 
+  function setupThemeToggle() {
+    const button = $("theme-toggle");
+    const applyTheme = (dark) => {
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      button.textContent = dark ? "☀" : "☾";
+      button.setAttribute("aria-pressed", String(dark));
+      button.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+      button.title = button.getAttribute("aria-label");
+    };
+    applyTheme(document.documentElement.dataset.theme === "dark");
+    button.addEventListener("click", () => {
+      const dark = document.documentElement.dataset.theme !== "dark";
+      applyTheme(dark);
+      try { localStorage.setItem("college-calendar-theme", dark ? "dark" : "light"); }
+      catch { /* The toggle still works if browser storage is unavailable. */ }
+    });
+  }
+
   function setupIdleCursor() {
     let idleTimer;
     const showCursor = () => {
@@ -325,6 +382,7 @@
     resizeFrame = requestAnimationFrame(renderCalendar);
   }).observe($("calendar-grid"));
 
+  setupThemeToggle();
   setupIdleCursor();
   renderCalendar();
   loadData();
